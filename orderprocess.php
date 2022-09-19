@@ -545,7 +545,7 @@
         
         <!-- <img src="assets/map.png" class="img-fluid"> -->
         <!-- <div class="mapDiv1"> -->
-          <div id='map1' style='width: 100%; height: 70%;'></div>
+          <div id='map1' class="map"></div>
         <!-- </div> -->
         
         <!-- <div class="row mt-5">
@@ -718,7 +718,7 @@
       </div>
       <div class="col-md-6 col-sm-12">
         <!-- <div class="mapDiv2"> -->
-          <div id='map2' class="map" style='width: 100%; height: 70%;'></div>
+          <div id='map2' class="map"></div>
         <!-- </div> -->
         <!-- <div id='map'></div> -->
         <!-- <img src="assets/map.png" class="img-fluid"> -->
@@ -770,9 +770,7 @@
     .checkoutFlash, .checkout_step_01{
         height: 83vh;
     }
-    #map {
-        position: absolute; top: 0; bottom: 0; width: 100%; 
-    }
+
     /* body{
         min-height: 83vh;
     } */
@@ -897,10 +895,16 @@
       transform: rotate(360deg);
     }
   }
-  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  #map {
+     position: absolute; top: 0; bottom: 0; width: 100%;
+     }
+     .map{
+      width: 100%;
+      height: 500px;
+     }
   .mapboxgl-canvas{
-    width: 100% !important;
-    height: 45% !important;
+    /* width: 100% !important; */
+    /* height: 45% !important; */
   }
   .marker {
         background-image: url('images/car.jpeg');
@@ -924,7 +928,10 @@
   $('.loadingDiv').addClass('loading');
 
     // Live query code here
-  $(document).ready(function(){
+  
+  
+  // $(document).ready(function(){
+  window.addEventListener("DOMContentLoaded", function() {
       // $('.d-none').removeClass('d-none');
       function processingInstance(){
           $(".checkout_step_01").addClass('d-none');
@@ -1158,7 +1165,7 @@
               .addTo(map);
         });
        
-
+        map.resize();
       }
 
       function setGeo2(lat, log, deliveryManName) {
@@ -1203,10 +1210,12 @@
               .addTo(map2);
         });
        
-
+        map2.resize();
       }
 
-  })
+      
+
+  });
   // Live query code End
 
 </script>
