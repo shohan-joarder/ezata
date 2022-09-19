@@ -1,0 +1,12 @@
+{
+  "name": "ezata",
+  "lockfileVersion": 2,
+  "requires": true,
+  "packages": {},
+  "dependencies": {
+    "@babel/core": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "@types/parse": "^2.18.16",
+    "babel-loader": "^8.2.5"
+  }
+}

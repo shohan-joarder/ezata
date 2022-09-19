@@ -1,0 +1,311 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative&family=Poppins:wght@500&display=swap');
+
+html{
+  scroll-behavior: smooth;
+}
+body{
+  
+  font-family: 'Cinzel Decorative', cursive !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+h1{
+  color: #000;
+}
+.inside .icon {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: white;
+  opacity: 1;
+}
+/*.owl-next{
+  width: 15px;
+  height: 100px;
+  position: absolute;
+  top: -30px;
+  right: 20px;
+  margin-left: -20px;
+  display: block !important;
+  border:0px solid black
+}
+.owl-prev{
+  width: 15px;
+  height: 100px;
+  position: absolute;
+  top: -30px;
+  right: 45px;
+  display: block !important;
+  border:0px solid black;
+}*/
+.see-all{
+  color: black;
+  font-weight: bold;
+}
+.card{
+  border: none !important;
+}
+.footer-banner{
+  padding: 2% 4%;
+  background: linear-gradient(348.56deg, #F3F3F3 54.66%, rgba(230, 233, 240, 0) 105.39%) !important;
+}
+.btn-round{
+  border-radius: 20px;
+}
+.footer-heart{
+  margin-left: 44%;
+}
+.footer-dot{
+  margin-left: 9%;
+}
+.header-banner{
+  background: #F6F2EF;
+}
+.btn-header{
+  margin-top: 6%;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.btn-text-header{
+  margin-right: 10px;
+}
+.star-2{
+  width: 14px !important;
+  position: absolute;
+  right: 2px;
+}
+.deal-name{
+  font-size: 14px !important;
+  font-weight: bold;
+}
+.deal-price{
+  font-size: 13px !important;
+  font-weight: 100;
+  opacity: 0.7;
+  margin-bottom: 0;
+}
+.deal-price-2{
+  font-size: 9px !important;
+  font-weight: 100;
+  opacity: 0.7;
+}
+.deal-cat{
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.deal-cat-2{
+  font-size: 9px;
+}
+.deal-time{
+  font-size: 11px;
+  opacity: 0.8;
+}
+.owl-nav.disabled{
+  display: block !important;
+}
+/*.arrow-right-icon{
+  position: absolute;
+  top: 12px;
+  right: -60px;
+  display: block !important;
+  border:0px solid black;
+}
+.arrow-left-icon{
+  position: absolute;
+  top: 12px;
+  right: -58px;
+  margin-left: -20px;
+  display: block !important;
+  border:0px solid black;
+}*/
+.d-line{
+  display: inline !important;
+}
+.deal-name-2{
+  font-size: 11px;
+  font-weight: bold;
+}
+.sec_header{
+  position: relative;
+}
+.sec_header .see-all {
+    right: 100px;
+    top: 27px;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    font-size: 16px;
+}
+/*div.header-f .see-all{
+    right: 100px;
+    top: 50%;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    font-size: 16px;
+}*/
+.products-spotlight-img{
+  width: 238px;
+  height: 96px;
+}
+.products-normal-img{
+  width: 320px;
+  height: 94px;
+}
+/*New CSS*/
+.category-block {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.category-wrap {
+    text-decoration: none;
+}
+
+.category-block img {
+    max-width: 30px;
+}
+
+.category-block h6 {
+    color: #000;
+    font-weight: 500;
+    font-size: 14px;
+}
+.category-responsive {
+    border-bottom: 2px solid #E7E4E4;
+}
+.jumbotron button{
+    padding: 5px 15px;
+}
+.jumbotron button i{
+    margin-left: 20px;
+}
+.menu_right_sec h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+.menu_right_sec .card > img {
+    height: 94px;
+    object-fit: cover;
+}
+.category-wrap:hover .category-block {
+    background: none;
+}
+.category-wrap:hover .category-block h6 {
+    color: #000;
+    text-decoration: none;
+}
+.gift_sec h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+.gift_sec h5 {
+    font-size: 14px;
+}
+.gift_sec p {
+    font-size: 12px;
+}
+.deal-name {
+    margin-bottom: 0;
+}
+.menu_right_sec .sec_header p {
+    font-size: 12px;
+    font-weight: 600;
+    color: #000;
+    opacity: .37;
+}
+.owl-nav {
+    display: flex;
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 25px;
+}
+
+.header-f {
+    margin-bottom: 17px;
+}
+
+.owl-nav > div {
+    margin-left: 7px;
+}
+.owl-nav.disabled {
+    display: flex !important;
+}
+#footer-owl-carousel .owl-stage {
+    padding: 0 !important;
+}
+#footer-owl-carousel .owl-stage .owl-item {
+    width: 47% !important;
+}
+#footer-owl-carousel .owl-nav.disabled {
+    bottom: auto;
+    top: -10px;
+    margin-bottom: 0;
+}
+#bannerCarousel.owl-carousel .owl-stage{
+    padding: 0 !important;
+}
+#bannerCarousel.owl-carousel .owl-stage .col-12{
+   padding: 0 !important; 
+}
+.jumbotron.header-banner .d-flex{
+    flex-wrap: wrap;
+}
+.jumbotron.header-banner .d-flex .container{
+    max-width: none;
+    width: 55%;
+}
+#bannerCarousel.owl-carousel .owl-item img {
+    display: inline-block;
+    width: 45%;
+}
+#bannerCarousel.owl-carousel .owl-item .btn-header img {
+    width: auto;
+}
+#bannerCarousel .owl-nav {
+    display: none !important;
+}
+@media only screen and (max-width: 767px){
+    .gift_sec .img-responsive {
+        width: 40%;
+    }
+    .deal-price-2 {
+        font-size: 9px !important;
+    }
+    .deal-price {
+        font-size: 9px !important;
+    }
+    .all-stores .img-fluid {
+        max-width: 11px;
+    }
+    .deal-name {
+        font-size: 10px !important;
+    }
+    .sec_header {
+        margin-bottom: 30px;
+    }
+    .sec_header .see-all {
+        right: 0;
+        top: 0;
+        position: absolute;
+        transform: none;
+        font-size: 14px;
+    }
+    /*#footer-owl-carousel .owl-stage .owl-item {
+        width: inherit !important;
+    }*/
+    #footer-owl-carousel .owl-nav{
+        margin-bottom: 0;
+    }
+    .category-block {
+        margin-bottom: 15px;
+    }
+    .category-responsive {
+        border-bottom: none;
+        max-width: 33.333%;
+    }
+    .row.category_sec {
+        border-bottom: 2px solid #ddd;
+    }
+}

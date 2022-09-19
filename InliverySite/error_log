@@ -1,0 +1,21 @@
+[09-Jan-2022 11:00:45 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:00:49 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:01:09 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:01:13 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:01:48 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:01:53 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:02:38 UTC] PHP Notice:  Undefined index: Id in /home/coder71/public_html/inliverty/InliverySite/detail.php on line 26
+[09-Jan-2022 11:02:39 UTC] PHP Fatal error:  Uncaught Error: Call to a member function get() on array in /home/coder71/public_html/inliverty/InliverySite/detail.php:38
+Stack trace:
+#0 {main}
+  thrown in /home/coder71/public_html/inliverty/InliverySite/detail.php on line 38
+[09-Jan-2022 11:02:54 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:02:58 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:09:18 UTC] PHP Notice:  Undefined index: Id in /home/coder71/public_html/inliverty/InliverySite/detail.php on line 26
+[09-Jan-2022 11:09:18 UTC] PHP Fatal error:  Uncaught Error: Call to a member function get() on array in /home/coder71/public_html/inliverty/InliverySite/detail.php:38
+Stack trace:
+#0 {main}
+  thrown in /home/coder71/public_html/inliverty/InliverySite/detail.php on line 38
+[09-Jan-2022 11:10:32 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:10:33 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
+[09-Jan-2022 11:10:36 UTC] PHP Notice:  Undefined variable: outputCat in /home/coder71/public_html/inliverty/InliverySite/index.php on line 77
