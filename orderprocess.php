@@ -1124,9 +1124,6 @@
       });
 
       function setGeo(lat, log, deliveryManName) {
-
-        // console.log(long +' ' + lat + ' '+ deliveryManName);
-
         geojson = {
           'type': 'FeatureCollection',
           'features': [
@@ -1169,9 +1166,6 @@
       }
 
       function setGeo2(lat, log, deliveryManName) {
-
-        // console.log(long +' ' + lat + ' '+ deliveryManName);
-
         geojson = {
           'type': 'FeatureCollection',
           'features': [
