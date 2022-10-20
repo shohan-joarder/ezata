@@ -1019,7 +1019,7 @@
       const AppID = '9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB';
       const JavaScriptKey = 'YBzS9s1lJWyWKc1Ys0rAA2gL70l9464SIpGoVr92';
       const LiveQuerySubDomain = 'ezata.b4a.io';
-      var lat; var long; var hLat; var hLong; var cLa; var cLo;
+      var lat; var long;
 
       /* Ininialize Parse */
       Parse.initialize(AppID, JavaScriptKey);
@@ -1028,46 +1028,35 @@
       /* Get Data From Product Table */ 
 
       async function getOrderData() {
-          const innerQueryDriver = new Parse.Query("Driver");
-
-          const innerQueryStore = new Parse.Query("Store"); 
-
+          const innerQueryState = new Parse.Query("Driver");
           // Query City class
-          const outerQueryOrder = new Parse.Query("Orders");
+          const outerQueryCity = new Parse.Query("Orders");
 
           // Match the State query by the "state" property
           
-          outerQueryOrder.matchesQuery("deliveryPerson", innerQueryDriver);
-
-          outerQueryOrder.matchesQuery("store", innerQueryStore);
+          outerQueryCity.matchesQuery("deliveryPerson", innerQueryState);
 
           // Include the "state" property so we can have the content of the State object as well
-          outerQueryOrder.include("deliveryPerson");
-          outerQueryOrder.include("store");
+          outerQueryCity.include("deliveryPerson");
           try {
-              let outerQueryResults = await outerQueryOrder.get(orderId);
+              let outerQueryResults = await outerQueryCity.get(orderId);
               $('.loadingDiv').removeClass('loading');
               let orderStatus = outerQueryResults.get("orderStatus");
               let deliveryManName = outerQueryResults.get("deliveryPerson").get("name");
               $(".deliveryMan").html(deliveryManName);
               
-              let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation");
+              let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation")
 
                 lat = deliveryCurrentLocation._latitude;
                 long = deliveryCurrentLocation._longitude;
-
-              let storeCurrentLocation = outerQueryResults.get("store").get("coordinate");
-              
-                hLat = storeCurrentLocation._latitude;
-                hLong = storeCurrentLocation._longitude;
 
               showHideByStatus(orderStatus ,deliveryManName);
               
               switch (orderStatus) {
                 case "IN_ROUTE":
-                  setGeo(lat,long ,deliveryManName,hLat, hLong);
+                  setGeo(lat,long ,deliveryManName);
                 case "LAST_MILE": 
-                  setGeo2(lat,long ,deliveryManName, hLat, hLong);
+                  setGeo2(lat,long ,deliveryManName);
                 break;
               
                 default:
@@ -1188,12 +1177,7 @@
         map.resize();
       }
 
-      function setGeo2(lat, log, deliveryManName, hLat, hLong) {
-        cLa = (lat + hLat) / 2;
-        cLo = (log + hLong) / 2;
-
-        //console.log(lat +"->" + log +"->" + hLat +"->" +hLong);
-
+      function setGeo2(lat, log, deliveryManName) {
         let geojson = {
           'type': 'FeatureCollection',
           'features': [
@@ -1202,17 +1186,6 @@
               'geometry': {
                 'type': 'Point',
                 'coordinates': [log, lat]
-              },
-              'properties': {
-                'title': 'Mapbox',
-                'description': 'Washington, D.C.'
-              }
-            },
-            {
-              'type': 'Hotel',
-              'geometry': {
-                'type': 'Point',
-                'coordinates': [38.75940654426813, 8.941962235917899]
               },
               'properties': {
                 'title': 'Mapbox',
@@ -1245,67 +1218,10 @@
         });
        
         map2.resize();
-
-      //   var geojson = {
-      //   'type': 'FeatureCollection',
-      //   'features': [
-      //     {
-      //       'type': 'Feature',
-      //       'geometry': {
-      //         'type': 'Point',
-      //         'coordinates': [lat, log]
-      //       },
-      //       'properties': {
-      //         'title': 'Mapbox',
-      //         'description': 'Washington, D.C.'
-      //       }
-      //     },
-      //     {
-      //       'type': 'Feature',
-      //       'geometry': {
-      //         'type': 'Point',
-      //         'coordinates': [hLat, hLong]
-      //       },
-      //       'properties': {
-      //         'title': 'Mapbox',
-      //         'description': 'San Francisco, California'
-      //       }
-      //     }
-      //   ]
-      // };
-
-      // let map2 = new mapboxgl.Map({
-      //   container: 'map2',
-      //   style: 'mapbox://styles/mapbox/streets-v11',
-      //   center: [cLa, cLo],
-      //   zoom: 8
-      // });
-
-      // // add markers to map
-      // geojson.features.forEach(function (marker) {
-      //   // create a HTML element for each feature
-      //   var el = document.createElement('div');
-      //   el.className = 'marker';
-
-      //   // make a marker for each feature and add it to the map
-      //   new mapboxgl.Marker(el)
-      //     .setLngLat(marker.geometry.coordinates)
-      //     .setPopup(
-      //       new mapboxgl.Popup({ offset: 25 }) // add popups
-      //         .setHTML(
-      //           '<h3>' +
-      //             marker.properties.title +
-      //             '</h3><p>' +
-      //             marker.properties.description +
-      //             '</p>'
-      //         )
-      //     )
-      //     .addTo(map2);
-      // });
-
-      // map2.resize();
-
       }
+
+      
+
   });
   // Live query code End
 
