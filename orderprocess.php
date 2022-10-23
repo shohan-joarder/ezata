@@ -1131,7 +1131,7 @@
         container: 'map2',
         style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
         center: [longitude, latitude], // starting position [lng, lat]
-        zoom: 8 // starting zoom
+        zoom: 12 // starting zoom
       });
 
       function setGeo(lat, log, deliveryManName) {
@@ -1191,7 +1191,7 @@
       function setGeo2(lat, log, deliveryManName, hLat, hLong) {
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
-
+        $('.marker1').remove();
         //console.log(lat +"->" + log +"->" + hLat +"->" +hLong);
 
         let geojson = {
@@ -1212,7 +1212,7 @@
               'type': 'Hotel',
               'geometry': {
                 'type': 'Point',
-                'coordinates': [38.75940654426813, 8.941962235917899]
+                'coordinates': [hLong, hLat]
               },
               'properties': {
                 'title': 'Mapbox',
@@ -1222,10 +1222,49 @@
           ]
         };
 
+
+        var coords = [
+          [log, lat],
+          [hLong, hLat],
+        ];
+
+        const route = {
+        'type': 'FeatureCollection',
+          'features': [
+            {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'LineString',
+              'coordinates': coords
+              }
+            }
+          ]
+        };
+
+        map2.on('load', () => {
+          map2.addSource('route', {
+            'type': 'geojson',
+            'data': route
+          });
+
+          map2.addLayer({
+              'id': 'route',
+              'source': 'route',
+              'type': 'line',
+              'paint': {
+                  'line-width': 2,
+                  'line-color': '#007cbf'
+              }
+          });
+          
+        });
+
+        
+
           // add markers to map
         geojson.features.forEach(function (marker) {
-          console.log(marker);
-          $('.marker').remove();
+          // console.log(marker);
+          // $('.marker').remove();
             // create a HTML element for each feature
             var el = document.createElement('div');
             el.className = 'marker';
@@ -1243,67 +1282,10 @@
               )
               .addTo(map2);
         });
-       
+
+        
+      
         map2.resize();
-
-      //   var geojson = {
-      //   'type': 'FeatureCollection',
-      //   'features': [
-      //     {
-      //       'type': 'Feature',
-      //       'geometry': {
-      //         'type': 'Point',
-      //         'coordinates': [lat, log]
-      //       },
-      //       'properties': {
-      //         'title': 'Mapbox',
-      //         'description': 'Washington, D.C.'
-      //       }
-      //     },
-      //     {
-      //       'type': 'Feature',
-      //       'geometry': {
-      //         'type': 'Point',
-      //         'coordinates': [hLat, hLong]
-      //       },
-      //       'properties': {
-      //         'title': 'Mapbox',
-      //         'description': 'San Francisco, California'
-      //       }
-      //     }
-      //   ]
-      // };
-
-      // let map2 = new mapboxgl.Map({
-      //   container: 'map2',
-      //   style: 'mapbox://styles/mapbox/streets-v11',
-      //   center: [cLa, cLo],
-      //   zoom: 8
-      // });
-
-      // // add markers to map
-      // geojson.features.forEach(function (marker) {
-      //   // create a HTML element for each feature
-      //   var el = document.createElement('div');
-      //   el.className = 'marker';
-
-      //   // make a marker for each feature and add it to the map
-      //   new mapboxgl.Marker(el)
-      //     .setLngLat(marker.geometry.coordinates)
-      //     .setPopup(
-      //       new mapboxgl.Popup({ offset: 25 }) // add popups
-      //         .setHTML(
-      //           '<h3>' +
-      //             marker.properties.title +
-      //             '</h3><p>' +
-      //             marker.properties.description +
-      //             '</p>'
-      //         )
-      //     )
-      //     .addTo(map2);
-      // });
-
-      // map2.resize();
 
       }
   });
