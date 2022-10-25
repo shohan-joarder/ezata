@@ -17,7 +17,7 @@
 	use Parse\ParseFile;
 	use Parse\ParseCloud;
 	use Parse\ParseClient;
-    use Parse\ParseGeoPoint; // fixed
+  use Parse\ParseGeoPoint; // fixed
 
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
@@ -64,20 +64,20 @@
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js'></script>
 <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css' rel='stylesheet' />
 
-<?php if(isset($_GET['order-id']) && @$_GET['order-id']!=''): ?>
+<?php 
 
-    <?php
+if(isset($_GET['order-id']) && @$_GET['order-id']!=''): 
 
-   
     $latitude = 0;
     $longitude = 0;
+    $sLatitude = 0;
+    $sLongitude = 0;
+
 
     $getOrderDataById = new ParseQuery("Orders");
     $getDriver = new ParseQuery("Driver");
 
     $getOrderDataById->equalTo("objectId", $_GET['order-id']);
-
-    // print_r()
 
     $cloneOrder = clone($getOrderDataById);
 
@@ -91,10 +91,22 @@
         $deliveryManId  = $orderData->deliveryPerson->getObjectId();
         // print_r($orderData);die;
         $cArr=[];
+        $sArr=[];
         $storeName = $orderData->store->get('name');
         $currentLocation =(array) $orderData->deliveryPerson->get('currentLocation');
+        $currentStore = (array) $orderData->store->get('coordinate');
+
+        foreach($currentStore as $key=>$value){
+          $sArr[] = $value;
+        }
+
         foreach($currentLocation as $k=>$v){
           $cArr[] = $v;
+        }
+
+        if(count($sArr)>0){
+          $sLatitude = $sArr[0];
+          $sLongitude = $sArr[1];
         }
         if(count($cArr)>0){
           $latitude = $cArr[0];
@@ -105,6 +117,16 @@
     }catch(ParseException $ex){
         echo $ex->getMessage(); 
     }
+
+    $routeResult = ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
+    
+    $resultArr = json_decode($routeResult);
+
+    $routeArray = $resultArr[1][0];
+    $currentRoute = json_encode($routeArray);
+
+
+ 
 
     $menuQuery = new ParseQuery("OrdersMenu");
     $menuQuery->matchesQuery("orderId", $cloneOrder);
@@ -163,6 +185,8 @@
 
     // echo "<pre>";
     // print_r($itemsHtml);die;
+
+    // print_r($_SERVER['REQUEST_METHOD']);
 
         ?>
 
@@ -929,7 +953,6 @@
 
     // Live query code here
   
-  
   // $(document).ready(function(){
   window.addEventListener("DOMContentLoaded", function() {
       // $('.d-none').removeClass('d-none');
@@ -987,11 +1010,6 @@
 
           }else if(status == "LAST_MILE"){
 
-            // $('.mapDiv1').remove();
-            // $(".mapDiv2").html(
-            //   "<div id='map'></div>"
-            // )
-
               $(".checkout_step_01").addClass('d-none');
               $(".checkoutFlash").addClass('d-none');
               $(".checkout_step_02").addClass('d-none');
@@ -1025,8 +1043,7 @@
       Parse.initialize(AppID, JavaScriptKey);
       Parse.serverURL = "https://parseapi.back4app.com/";
       
-      /* Get Data From Product Table */ 
-
+      /* Get Data From Product Table */
       async function getOrderData() {
           const innerQueryDriver = new Parse.Query("Driver");
 
@@ -1100,7 +1117,6 @@
       /* Update Events for order update*/
       orders.on('update', (product) => {
           getOrderData();
-          // console.log('Product updated');
           console.log(product.id);
       });
 
@@ -1188,11 +1204,25 @@
         map.resize();
       }
 
+      let r;
+      const getRoute =(destLat,destLong,orgLat,orgLong)=>{
+        // $result
+        $.ajax({
+          type: "POST",
+          data: {destLat,destLong,orgLat,orgLong},
+          url: 'generateRoute.php',
+          success: function(data)
+          {
+            r = JSON.parse(data)
+            return r;
+          }
+        });
+      }
+
       function setGeo2(lat, log, deliveryManName, hLat, hLong) {
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
         $('.marker1').remove();
-        //console.log(lat +"->" + log +"->" + hLat +"->" +hLong);
 
         let geojson = {
           'type': 'FeatureCollection',
@@ -1222,11 +1252,51 @@
           ]
         };
 
+        /* let geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [9.02048278736716, 38.760026232107954]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            },
+            {
+              'type': 'Hotel',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [8.02048278736716, 38.760026232107954]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            }
+          ]
+        }; */
 
-        var coords = [
-          [log, lat],
-          [hLong, hLat],
-        ];
+
+        var coords;
+        
+        coords = "<?= $currentRoute ?>";
+        coords = JSON.parse(coords);
+
+        // var coords = [];
+        // [
+        //   [log, lat],
+        //   [hLong, hLat],
+        // ];
+
+        // console.log(coords);
+
+        // coords = 
+        // [[38.759688,8.942312],[38.759592,8.942388],[38.759544,8.942536],[38.759472,8.942596],[38.759453,8.942682],[38.759413,8.942761],[38.759375,8.94291],[38.759481,8.942925],[38.759646,8.942973],[38.759678,8.942974],[38.759694,8.943072],[38.759706,8.943198],[38.759639,8.943282],[38.759603,8.943358],[38.75956,8.943493],[38.759596,8.943508],[38.759631,8.943544],[38.759659,8.943615],[38.759706,8.943624],[38.759873,8.943624],[38.759866,8.943672],[38.759886,8.943745],[38.759948,8.943832],[38.760092,8.944031],[38.760287,8.944267],[38.76058,8.944556],[38.760648,8.944667],[38.760665,8.944876],[38.760628,8.945107],[38.760585,8.945259],[38.760422,8.945551],[38.760356,8.945637],[38.760136,8.945874],[38.760066,8.945957],[38.760012,8.946041],[38.759964,8.946217],[38.759969,8.946777],[38.759954,8.947152],[38.759961,8.947285],[38.759973,8.947429],[38.760014,8.94754],[38.760219,8.947845],[38.76035,8.948145],[38.76044,8.94865],[38.76044,8.948767],[38.760382,8.949029],[38.760308,8.949299],[38.760247,8.949404],[38.760163,8.949507],[38.759991,8.949624],[38.759801,8.949731],[38.759512,8.950017],[38.759371,8.950211],[38.759261,8.95035],[38.759292,8.9505],[38.759348,8.950637],[38.759537,8.950979],[38.759615,8.951126],[38.759917,8.95176],[38.759983,8.951847],[38.760076,8.951935],[38.760212,8.952017],[38.760432,8.952137],[38.76036,8.952188],[38.760285,8.95226],[38.760186,8.95241],[38.760122,8.952543],[38.759949,8.953137],[38.759922,8.953194],[38.759882,8.953246],[38.759774,8.95329],[38.759615,8.953316],[38.759353,8.953369],[38.759116,8.953444],[38.75889,8.953596],[38.758667,8.953764],[38.758453,8.953943],[38.758384,8.953993],[38.758281,8.954071],[38.758048,8.954385],[38.757834,8.954746],[38.757636,8.955119],[38.757553,8.955278],[38.757335,8.955526],[38.756995,8.955868],[38.756943,8.955932],[38.756703,8.95623],[38.756467,8.956523],[38.756324,8.956652],[38.755993,8.956965],[38.755664,8.957307],[38.755559,8.957442],[38.755505,8.957524],[38.755458,8.957645],[38.755422,8.957658],[38.755367,8.95771],[38.755252,8.957853],[38.755005,8.958131],[38.754938,8.958183],[38.75458,8.958373],[38.754377,8.958452],[38.753728,8.958707],[38.753437,8.958798],[38.75323,8.958854],[38.752979,8.958902],[38.75253,8.958936],[38.75209,8.958955],[38.751812,8.958944],[38.751637,8.958943],[38.751455,8.95892],[38.751267,8.958853],[38.751021,8.958718],[38.75091,8.958649],[38.750704,8.958524],[38.75061,8.958478],[38.750346,8.958377],[38.75021,8.958332],[38.750065,8.958287],[38.750059,8.958337],[38.750035,8.958397],[38.750006,8.95845],[38.749874,8.958595],[38.749791,8.958662],[38.749596,8.958847],[38.749403,8.959024],[38.749225,8.959178],[38.749035,8.959353],[38.748975,8.959404],[38.748805,8.959574],[38.748685,8.959738],[38.748637,8.959838],[38.748591,8.960003],[38.748572,8.960402],[38.748649,8.961566],[38.748609,8.96179],[38.748528,8.962093],[38.748499,8.96227],[38.748499,8.962458],[38.748534,8.962824],[38.748613,8.963491],[38.748684,8.964229],[38.748712,8.965397],[38.74873,8.965991],[38.748736,8.966444],[38.748667,8.966441],[38.748034,8.966468],[38.747513,8.966475],[38.747312,8.966468],[38.747252,8.966459],[38.746961,8.966335],[38.74685,8.966282],[38.746679,8.966441],[38.745936,8.967127],[38.744984,8.968007],[38.744442,8.968495],[38.744005,8.968868],[38.743855,8.968989],[38.743796,8.969041],[38.743744,8.969086],[38.743692,8.969139],[38.743678,8.969174],[38.743651,8.969226],[38.743591,8.969279],[38.74343,8.969392],[38.743051,8.969726],[38.742803,8.969971],[38.742393,8.970401],[38.742109,8.970627],[38.741501,8.971257],[38.741709,8.971399],[38.741843,8.971518]]
+        // console.log(coords);
 
         const route = {
         'type': 'FeatureCollection',
@@ -1299,4 +1369,7 @@
  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
-<?php include 'footer.php'; ?>
+<?php include 'footer.php'; 
+
+
+?>
