@@ -111,7 +111,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     $routeResult =  ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
     $resultArr = json_decode($routeResult);
     if($resultArr->error){
-      $currentRoute = [[]];
+      $currentRoute = json_encode([[]]);
     }else{
       $routeArray = @$resultArr[1][0];
       $currentRoute = json_encode($routeArray);
