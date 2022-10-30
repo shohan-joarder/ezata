@@ -1,9 +1,4 @@
 <?php
-/*
-	@Author: 
-	DataStore App By Parse-PHP-SDK
-	2016
-	*/
 	require'vendor/autoload.php';
 
 	use Parse\ParseObject;
@@ -25,7 +20,6 @@
   
   $MarkersHTML = '';
   $output = '';
-
   //ParseClient::setServerURL('http://parseserver-jxjv2-env.us-east-1.elasticbeanstalk.com','parse');
 
   ParseClient::initialize( "9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB", "yg51KKzO3QMgw8brdP1FETmTerNDB4MKTEH9HneI", "I82wQlOUEAXSlG5EspgatZvJfWJlqnnusfvB0tI8" );
@@ -34,9 +28,7 @@
   $query = new ParseQuery("Store");
   $query->equalTo("featured", True);
   try {
-    
       $results = $query->find();
-     
   } catch (ParseException $ex) {
      
       echo $ex->getMessage(); 
@@ -72,8 +64,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     $longitude = 0;
     $sLatitude = 0;
     $sLongitude = 0;
-
-
+    
     $getOrderDataById = new ParseQuery("Orders");
     $getDriver = new ParseQuery("Driver");
 
@@ -89,7 +80,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         $orderData = $getOrderDataById->first();
 
         $deliveryManId  = $orderData->deliveryPerson->getObjectId();
-        // print_r($orderData);die;
         $cArr=[];
         $sArr=[];
         $storeName = $orderData->store->get('name');
@@ -117,16 +107,15 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     }catch(ParseException $ex){
         echo $ex->getMessage(); 
     }
-
-    $routeResult = ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
     
+    $routeResult =  ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
     $resultArr = json_decode($routeResult);
-
-    $routeArray = $resultArr[1][0];
-    $currentRoute = json_encode($routeArray);
-
-
- 
+    if($resultArr->error){
+      $currentRoute = [[]];
+    }else{
+      $routeArray = @$resultArr[1][0];
+      $currentRoute = json_encode($routeArray);
+    }
 
     $menuQuery = new ParseQuery("OrdersMenu");
     $menuQuery->matchesQuery("orderId", $cloneOrder);
@@ -136,7 +125,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         $orderDetails = $menuQuery->find();
     } catch (\Throwable $th) {
         echo $th->getMessage();
-        //throw $th;
     }
 
     // $deliveryQuery = new ParseQuery('Driver');
@@ -151,10 +139,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     // } catch (\Throwable $th) {
     //   //throw $th;
     // }
-
-
-
-    // print_r($delivery[0]->currentLocation);die;
 
     $itemsHtml='';
 
@@ -183,10 +167,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
 
     // $orderData = $getOrderDataById->get($orderMenu);
 
-    // echo "<pre>";
-    // print_r($itemsHtml);die;
-
-    // print_r($_SERVER['REQUEST_METHOD']);
+    // print_r($_SERVER['REQUEST_METHOD']); die;
 
         ?>
 
@@ -821,8 +802,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     left: 0;
     width: 100%;
     height: 100%;
-      background: radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0, .8));
-
+    background: radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0, .8));
     background: -webkit-radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0,.8));
   }
 
@@ -968,6 +948,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       
       function showHideByStatus(status){
 
+        console.log(status);
           if(status == "IN_PROGRESS"){
               // alert(status);
               $(".checkout_step_01").addClass('d-none');
@@ -1078,7 +1059,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
                 hLat = storeCurrentLocation._latitude;
                 hLong = storeCurrentLocation._longitude;
 
-              showHideByStatus(orderStatus ,deliveryManName);
+              showHideByStatus(orderStatus);
               
               switch (orderStatus) {
                 case "IN_ROUTE":
@@ -1323,8 +1304,4 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
  <script src="https://unpkg.com/parse@3.4.3/dist/parse.min.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
-<?php include 'footer.php'; 
-
-
-?>
+<?php include 'footer.php'?>
