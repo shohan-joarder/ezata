@@ -58,6 +58,7 @@
 
 <?php 
 
+
 if(isset($_GET['order-id']) && @$_GET['order-id']!=''): 
 
     $latitude = 0;
@@ -65,25 +66,48 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     $sLatitude = 0;
     $sLongitude = 0;
     
+    $userLatitude = 0;
+    $userLongitude = 0;
+
     $getOrderDataById = new ParseQuery("Orders");
     $getDriver = new ParseQuery("Driver");
+    $getAddress = new ParseQuery("Address");
 
     $getOrderDataById->equalTo("objectId", $_GET['order-id']);
 
     $cloneOrder = clone($getOrderDataById);
 
-    $getOrderDataById->includeKey(["store","deliveryPerson"]);
-
-    // $getOrderDataById->includeKey("userOrdered");
+    $getOrderDataById->includeKey(["store","deliveryPerson","address"]);
 
     try {
         $orderData = $getOrderDataById->first();
-
-        $deliveryManId  = $orderData->deliveryPerson->getObjectId();
         $cArr=[];
         $sArr=[];
+        $currentLocation = [];
+
+        if($orderData->deliveryPerson){
+          $deliveryManId  = $orderData->deliveryPerson->getObjectId();
+          $currentLocation =(array) $orderData->deliveryPerson->get('currentLocation');
+        }
+        
+
+        if($orderData->address){
+          $userLocation =(array) $orderData->address->get("addressGeo");
+
+          if(count($userLocation)>0){
+
+            foreach ($userLocation as $key => $value) {
+              $userLocationKVArr[] = $value;
+            }
+            // print_r($userLocationKVArr);die;
+            $userLatitude  = $userLocationKVArr[0];
+            $userLongitude = $userLocationKVArr[1];
+          }
+        }
+        
+        // print_r($userLongitude);die;
         $storeName = $orderData->store->get('name');
-        $currentLocation =(array) $orderData->deliveryPerson->get('currentLocation');
+        
         $currentStore = (array) $orderData->store->get('coordinate');
 
         foreach($currentStore as $key=>$value){
@@ -98,24 +122,47 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           $sLatitude = $sArr[0];
           $sLongitude = $sArr[1];
         }
+
+        // print_r(ParseCloud::run("getAddress",'Public Read, jClDsoR8lL'));
+        // die;
+        // $ga = ParseCloud::run("getAddress", ["currentUser"=>$orderData->userOrdered->getObjectId()]);
+
+        // echo "<pre>";
+        
+        // print_r($ga[0]);
+
         if(count($cArr)>0){
           $latitude = $cArr[0];
           $longitude = $cArr[1];
         }
         $totalAmount = $orderData->get("amount");
         $orderNumber = $orderData->get("orderNumber");
+
     }catch(ParseException $ex){
         echo $ex->getMessage(); 
     }
     
     $routeResult =  ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
+
     $resultArr = json_decode($routeResult);
+
     if($resultArr->error){
       $currentRoute = json_encode([[]]);
     }else{
       $routeArray = @$resultArr[1][0];
       $currentRoute = json_encode($routeArray);
     }
+
+    $userDriverRoute = ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$userLatitude,"originLongitude" =>$userLongitude]);
+    // echo "<pre>";
+    // print_r($userDriverRoute);die;
+    $userDriverRouteArr = json_decode($userDriverRoute);
+    if($userDriverRouteArr->error){
+      $driverToUserRoute =json_encode([[]]);
+    }else{
+      $driverToUserRoute = json_encode($userDriverRouteArr[1][0]);
+    }
+
 
     $menuQuery = new ParseQuery("OrdersMenu");
     $menuQuery->matchesQuery("orderId", $cloneOrder);
@@ -977,10 +1024,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               $(".checkout_step_03").removeClass('d-none');
 
           }else if(status == "IN_ROUTE"){
-            //   $('.mapDiv2').remove();
-            // $(".mapDiv1").html(
-            //   "<div id='map'></div>"
-            // )
               $(".checkout_step_01").addClass('d-none');
               $(".checkoutFlash").addClass('d-none');
               $(".checkout_step_02").addClass('d-none');
@@ -1018,7 +1061,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       const AppID = '9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB';
       const JavaScriptKey = 'YBzS9s1lJWyWKc1Ys0rAA2gL70l9464SIpGoVr92';
       const LiveQuerySubDomain = 'ezata.b4a.io';
-      var lat; var long; var hLat; var hLong; var cLa; var cLo;
+      var lat; var long; var hLat; var hLong; var cLa; var cLo; var userLat; var userLong;
 
       /* Ininialize Parse */
       Parse.initialize(AppID, JavaScriptKey);
@@ -1035,45 +1078,57 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
 
           // Match the State query by the "state" property
           
-          outerQueryOrder.matchesQuery("deliveryPerson", innerQueryDriver);
+          // outerQueryOrder.matchesQuery("deliveryPerson", innerQueryDriver);
 
           outerQueryOrder.matchesQuery("store", innerQueryStore);
 
           // Include the "state" property so we can have the content of the State object as well
           outerQueryOrder.include("deliveryPerson");
+
           outerQueryOrder.include("store");
           try {
               let outerQueryResults = await outerQueryOrder.get(orderId);
               $('.loadingDiv').removeClass('loading');
               let orderStatus = outerQueryResults.get("orderStatus");
-              let deliveryManName = outerQueryResults.get("deliveryPerson").get("name");
+              let deliveryManName = '';
+
+              // console.log(outerQueryResults.get("deliveryPerson"));die;
+
+              if(outerQueryResults.get("deliveryPerson")){
+                deliveryManName = outerQueryResults.get("deliveryPerson").get("name");
+
+                let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation");
+
+                  lat = deliveryCurrentLocation._latitude;
+                  long = deliveryCurrentLocation._longitude;
+              }
+              
               $(".deliveryMan").html(deliveryManName);
               
-              let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation");
-
-                lat = deliveryCurrentLocation._latitude;
-                long = deliveryCurrentLocation._longitude;
 
               let storeCurrentLocation = outerQueryResults.get("store").get("coordinate");
               
                 hLat = storeCurrentLocation._latitude;
                 hLong = storeCurrentLocation._longitude;
 
+                userLat = "<?=$userLatitude ?>";
+                userLong = "<?=$userLongitude ?>";
+
+              // console.table([userLat,userLong])
+
               showHideByStatus(orderStatus);
               
               switch (orderStatus) {
                 case "IN_ROUTE":
-                  setGeo(lat,long ,deliveryManName,hLat, hLong);
+                  setGeo1(lat,long ,deliveryManName, hLat, hLong);
                 case "LAST_MILE": 
-                  setGeo2(lat,long ,deliveryManName, hLat, hLong);
+                  setGeo2(lat,long ,deliveryManName, userLat, userLong);
                 break;
               
                 default:
                   break;
               }
 
-              
-              
           } catch (error) {
               console.log(`Failed to query object: ${error.message}`);
               return false;
@@ -1117,11 +1172,15 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       
       // var geojson;
 
-      var map = new mapboxgl.Map({
+      var map1 = new mapboxgl.Map({
+          // container: 'map1',
+          // style: 'mapbox://styles/mapbox/streets-v11',
+          // center: [longitude, latitude],
+          // zoom: 8
           container: 'map1',
-          style: 'mapbox://styles/mapbox/streets-v11',
-          center: [longitude, latitude],
-          zoom: 8
+          style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+          center: [longitude, latitude], // starting position [lng, lat]
+          zoom: 12 // starting zoom
       });
 
       var map2 = new mapboxgl.Map({
@@ -1186,24 +1245,11 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       }
 
       let r;
-      const getRoute =(destLat,destLong,orgLat,orgLong)=>{
-        // $result
-        $.ajax({
-          type: "POST",
-          data: {destLat,destLong,orgLat,orgLong},
-          url: 'generateRoute.php',
-          success: function(data)
-          {
-            r = JSON.parse(data)
-            return r;
-          }
-        });
-      }
 
-      function setGeo2(lat, log, deliveryManName, hLat, hLong) {
+      function setGeo1(lat, log, deliveryManName, hLat, hLong) {
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
-        $('.marker').remove();
+        $('.marker1').remove();
 
         let geojson = {
           'type': 'FeatureCollection',
@@ -1251,6 +1297,89 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           ]
         };
 
+        map1.on('load', () => {
+          map1.addSource('route', {
+            'type': 'geojson',
+            'data': route
+          });
+
+          map1.addLayer({
+              'id': 'route',
+              'source': 'route',
+              'type': 'line',
+              'paint': {
+                  'line-width': 2,
+                  'line-color': '#007cbf'
+              }
+          });
+          
+        });
+        
+        // add markers to map
+        geojson.features.forEach(function (marker, i) {
+            // create a HTML element for each feature
+            var el = document.createElement('div');
+            el.className = 'marker marker1';
+
+            // make a marker for each feature and add it to the map
+            new mapboxgl.Marker(el)
+              .setLngLat(marker.geometry.coordinates)
+              .addTo(map1);
+        });
+        
+        map1.resize();
+      }
+
+      function setGeo2(lat, log, deliveryManName, hLat, hLong) {
+        cLa = (lat + hLat) / 2;
+        cLo = (log + hLong) / 2;
+        $('.marker2').remove();
+
+        let geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [log, lat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            },
+            {
+              'type': 'Hotel',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [hLong, hLat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            }
+          ]
+        };
+
+        var coords2;
+        coords2 = "<?= $driverToUserRoute ?>";
+        coords2 = JSON.parse(coords2);
+
+        const route = {
+        'type': 'FeatureCollection',
+          'features': [
+            {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'LineString',
+              'coordinates': coords2
+              }
+            }
+          ]
+        };
+
         map2.on('load', () => {
           map2.addSource('route', {
             'type': 'geojson',
@@ -1271,23 +1400,14 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         
         // add markers to map
         geojson.features.forEach(function (marker, i) {
-          // console.log(marker);
-          // $('.marker_0').remove();
+          // console.log(marker +" Marker ");
             // create a HTML element for each feature
             var el = document.createElement('div');
-            el.className = 'marker';
+            el.className = 'marker marker2';
 
             // make a marker for each feature and add it to the map
             new mapboxgl.Marker(el)
               .setLngLat(marker.geometry.coordinates)
-              // .setPopup(
-              //   new mapboxgl.Popup({ offset: 25 }) // add popups
-              //     .setHTML(
-              //       '<h6>Your order is on the way now</h6><p>' +
-              //       deliveryManName + i +
-              //         'is now on the way </p>'
-              //     )
-              // )
               .addTo(map2);
         });
         

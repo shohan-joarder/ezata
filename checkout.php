@@ -1,106 +1,167 @@
 
-<?php include 'header.php'; ?>
+  <!-- 
+    Check user if logged in
+    -->
+    <?php 
+    require 'vendor/autoload.php';
+    session_start();
+    if(isset($_SESSION["isLoggedIn"])){
+      $userId = $_SESSION["userObjId"];
+    }else{
+      header('Location: /order.php');
+    }
+    use Parse\ParseQuery;
+    use Parse\ParseException;
+    use Parse\ParseClient;
+    ParseClient::initialize("9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB", "yg51KKzO3QMgw8brdP1FETmTerNDB4MKTEH9HneI", "I82wQlOUEAXSlG5EspgatZvJfWJlqnnusfvB0tI8");
+    ParseClient::setServerURL('https://parseapi.back4app.com', '/');
 
+
+    /* 
+    Parse query for address start
+    */
+    // $getUser = new ParseQuery("User");
+    // $getUser->equalTo("objectId", $userId);
+    // echo "<pre>";
+    // print_r($userId);
+    // die;
+
+    $addressOptions = '<option value="">Select your address...</option>';
+
+    $query2 = new ParseQuery("Address");
+    $query2->includeKey('user');
+    // $query2->matchesQuery("user", $userId);
+    // $query = new ParseQuery("User");
+    // $query2->equalTo("user", "DQYVFrvYkP");
+    // $addressQuery->equalTo("user", $userId);
+    // die;
+    // echo "<pre>";
+    // print_r($query2->find());
+    // die;
+
+    try {
+      $addressQueryData = $query2->find();
+
+      foreach ($addressQueryData as $key => $value) {
+        if($value->user){
+        if($value->user->getObjectId() === @$userId){
+          // $addressOptions .= '<option value="'. $value->street .'">'.$value->street.'</option>';
+          $addressOptions .= '<option value="'.$value->getObjectId() .'">'.$value->street.'</option>';
+          }
+        }
+      }
+
+    } catch (ParseException $ex) {
+      echo $ex->getMessage();
+    }
+    /* 
+    Parse query for address end
+    */
+
+
+    ?>
+  <!-- 
+    Check user if logged in
+    -->
+<?php include 'header.php'; ?>
   
 <style>
 
-.text-navy {
-    color: #1ab394;
-}
-.cart-product-imitation {
-  text-align: center;
-  padding-top: 30px;
-  height: 80px;
-  width: 80px;
-  background-color: #f8f8f9;
-}
-.product-imitation.xl {
-  padding: 120px 0;
-}
-.product-desc {
-  padding: 20px;
-  position: relative;
-}
-.ecommerce .tag-list {
-  padding: 0;
-}
-.ecommerce .fa-star {
-  color: #d1dade;
-}
-.ecommerce .fa-star.active {
-  color: #f8ac59;
-}
-.ecommerce .note-editor {
-  border: 1px solid #e7eaec;
-}
-table.shoping-cart-table {
-  margin-bottom: 0;
-}
-table.shoping-cart-table tr td {
-  border: none;
-  text-align: right;
-}
-table.shoping-cart-table tr td.desc,
-table.shoping-cart-table tr td:first-child {
-  text-align: left;
-}
-table.shoping-cart-table tr td:last-child {
-  width: 80px;
-}
-.ibox {
-  clear: both;
-  margin-bottom: 25px;
-  margin-top: 0;
-  padding: 0;
-}
-.ibox.collapsed .ibox-content {
-  display: none;
-}
-.ibox:after,
-.ibox:before {
-  display: table;
-}
-.ibox-title {
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-top-colors: none;
-  background-color: #ffffff;
-  border-color: #e7eaec;
-  border-image: none;
-  border-style: solid solid none;
-  border-width: 3px 0 0;
-  color: inherit;
-  margin-bottom: 0;
-  padding: 14px 15px 7px;
-  min-height: 48px;
-}
-.ibox-content {
-  background-color: #ffffff;
-  color: inherit;
-  padding: 15px 20px 20px 20px;
-  border-color: #e7eaec;
-  border-image: none;
-  border-style: solid solid none;
-  border-width: 1px 0;
-}
-.ibox-footer {
-  color: inherit;
-  border-top: 1px solid #e7eaec;
-  background: #ffffff;
-  padding: 10px 15px;
-}
-.form-control {
-    display: block;
-    width: 100%;
-    padding: .5rem .75rem;
-    font-size: 14px;
-}
+  .text-navy {
+      color: #1ab394;
+  }
+  .cart-product-imitation {
+    text-align: center;
+    padding-top: 30px;
+    height: 80px;
+    width: 80px;
+    background-color: #f8f8f9;
+  }
+  .product-imitation.xl {
+    padding: 120px 0;
+  }
+  .product-desc {
+    padding: 20px;
+    position: relative;
+  }
+  .ecommerce .tag-list {
+    padding: 0;
+  }
+  .ecommerce .fa-star {
+    color: #d1dade;
+  }
+  .ecommerce .fa-star.active {
+    color: #f8ac59;
+  }
+  .ecommerce .note-editor {
+    border: 1px solid #e7eaec;
+  }
+  table.shoping-cart-table {
+    margin-bottom: 0;
+  }
+  table.shoping-cart-table tr td {
+    border: none;
+    text-align: right;
+  }
+  table.shoping-cart-table tr td.desc,
+  table.shoping-cart-table tr td:first-child {
+    text-align: left;
+  }
+  table.shoping-cart-table tr td:last-child {
+    width: 80px;
+  }
+  .ibox {
+    clear: both;
+    margin-bottom: 25px;
+    margin-top: 0;
+    padding: 0;
+  }
+  .ibox.collapsed .ibox-content {
+    display: none;
+  }
+  .ibox:after,
+  .ibox:before {
+    display: table;
+  }
+  .ibox-title {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #ffffff;
+    border-color: #e7eaec;
+    border-image: none;
+    border-style: solid solid none;
+    border-width: 3px 0 0;
+    color: inherit;
+    margin-bottom: 0;
+    padding: 14px 15px 7px;
+    min-height: 48px;
+  }
+  .ibox-content {
+    background-color: #ffffff;
+    color: inherit;
+    padding: 15px 20px 20px 20px;
+    border-color: #e7eaec;
+    border-image: none;
+    border-style: solid solid none;
+    border-width: 1px 0;
+  }
+  .ibox-footer {
+    color: inherit;
+    border-top: 1px solid #e7eaec;
+    background: #ffffff;
+    padding: 10px 15px;
+  }
+  .form-control {
+      display: block;
+      width: 100%;
+      padding: .5rem .75rem;
+      font-size: 14px;
+  }
 </style>
     
     <!--//END RESERVE A SEAT -->
-    
-    
     
     <!--============================= BOOKING DETAILS =============================-->
     <section class="light-bg booking-details_wrap">
@@ -108,7 +169,7 @@ table.shoping-cart-table tr td:last-child {
        <div class="container" style="padding-top:20px;">
   
         <h3>Checkout </h3>
-<br>
+      <br>
       <div class="row">
         <div class="col-md-4 order-md-2 mb-4">
           <h4 class="d-flex justify-content-between align-items-center mb-3" >
@@ -194,7 +255,10 @@ table.shoping-cart-table tr td:last-child {
 
             <div class="mb-3">
               <label for="address">Address</label>
-              <input type="text" class="form-control" id="address" placeholder="1234 Main St" required="">
+              <select class="form-control" name="" id="address">
+                <?= $addressOptions ?>
+              </select>
+              <!-- <input type="text" class="form-control" id="address" placeholder="1234 Main St" required=""> -->
               <div class="invalid-feedback errorAddress">
                 Please enter your shipping address.
               </div>
@@ -294,6 +358,7 @@ table.shoping-cart-table tr td:last-child {
       let deliveryType = $("input[name='delivery_type']:checked").val();
       // let current_userId = $userId;?
       let address = $("#address").val();
+      // console.log(address);return false;
       if(address == ""){
         $(".errorAddress").show();
       }else{

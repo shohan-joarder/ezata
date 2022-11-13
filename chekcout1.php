@@ -1,11 +1,9 @@
 <?php
-/*
+    /*
 	@Author: 
 	DataStore App By Parse-PHP-SDK
 	2016
 	*/
-
-
 	require'vendor/autoload.php';
 
 	use Parse\ParseObject;

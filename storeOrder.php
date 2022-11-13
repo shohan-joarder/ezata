@@ -32,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $store = new ParseObject("Store", current($cartData)["store_id"]);
     $order->set("store", $store);
 
+    $address = new ParseObject("Address",$address);
+    $order->set('address', $address);
+
     $user = new ParseObject("_User", $_SESSION["userObjId"]);
     $order->set("userOrdered", $user);
     // die;
