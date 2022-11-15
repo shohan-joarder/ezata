@@ -957,7 +957,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     /* width: 100% !important; */
     /* height: 45% !important; */
   }
-  .marker {
+  .marker20, .marker11 {
         background-image: url('images/car.jpeg');
         background-size: cover;
         width: 23px;;
@@ -965,11 +965,27 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         border-radius: 50%;
         cursor: pointer;
     }
-  .marker1 {
+  /* .marker1 {
         background-image: url('images/car.jpeg');
         background-size: cover;
         width: 23px;;
         height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+    } */
+  .marker21 {
+        background-image: url('images/home.jpeg');
+        background-size: cover;
+        width: 40px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+  .marker10 {
+        background-image: url('images/bekary.jpeg');
+        background-size: cover;
+        width: 28px;
+        height: 25px;
         border-radius: 50%;
         cursor: pointer;
     }
@@ -1249,7 +1265,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       function setGeo1(lat, log, deliveryManName, hLat, hLong) {
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
-        $('.marker1').remove();
+        $('.marker11').remove();
 
         let geojson = {
           'type': 'FeatureCollection',
@@ -1319,7 +1335,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         geojson.features.forEach(function (marker, i) {
             // create a HTML element for each feature
             var el = document.createElement('div');
-            el.className = 'marker marker1';
+            el.className = 'marker marker1 marker1'+i;
 
             // make a marker for each feature and add it to the map
             new mapboxgl.Marker(el)
@@ -1333,7 +1349,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       function setGeo2(lat, log, deliveryManName, hLat, hLong) {
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
-        $('.marker2').remove();
+        $('.marker20').remove();
 
         let geojson = {
           'type': 'FeatureCollection',
@@ -1403,7 +1419,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           // console.log(marker +" Marker ");
             // create a HTML element for each feature
             var el = document.createElement('div');
-            el.className = 'marker marker2';
+            el.className = 'marker marker2 marker2'+i;
 
             // make a marker for each feature and add it to the map
             new mapboxgl.Marker(el)
