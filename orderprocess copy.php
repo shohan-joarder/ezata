@@ -1,9 +1,4 @@
 <?php
-/*
-	@Author: 
-	DataStore App By Parse-PHP-SDK
-	2016
-	*/
 	require'vendor/autoload.php';
 
 	use Parse\ParseObject;
@@ -17,7 +12,7 @@
 	use Parse\ParseFile;
 	use Parse\ParseCloud;
 	use Parse\ParseClient;
-    use Parse\ParseGeoPoint; // fixed
+  use Parse\ParseGeoPoint; // fixed
 
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
@@ -25,7 +20,6 @@
   
   $MarkersHTML = '';
   $output = '';
-
   //ParseClient::setServerURL('http://parseserver-jxjv2-env.us-east-1.elasticbeanstalk.com','parse');
 
   ParseClient::initialize( "9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB", "yg51KKzO3QMgw8brdP1FETmTerNDB4MKTEH9HneI", "I82wQlOUEAXSlG5EspgatZvJfWJlqnnusfvB0tI8" );
@@ -34,9 +28,7 @@
   $query = new ParseQuery("Store");
   $query->equalTo("featured", True);
   try {
-    
       $results = $query->find();
-     
   } catch (ParseException $ex) {
      
       echo $ex->getMessage(); 
@@ -55,7 +47,7 @@
   }
 
 
-    // include 'header.php';
+    include 'header.php';
 ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
@@ -64,47 +56,113 @@
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js'></script>
 <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css' rel='stylesheet' />
 
-<?php if(isset($_GET['order-id']) && @$_GET['order-id']!=''): ?>
+<?php 
 
-    <?php
 
-   
+if(isset($_GET['order-id']) && @$_GET['order-id']!=''): 
+
     $latitude = 0;
     $longitude = 0;
+    $sLatitude = 0;
+    $sLongitude = 0;
+    
+    $userLatitude = 0;
+    $userLongitude = 0;
 
     $getOrderDataById = new ParseQuery("Orders");
     $getDriver = new ParseQuery("Driver");
+    $getAddress = new ParseQuery("Address");
 
     $getOrderDataById->equalTo("objectId", $_GET['order-id']);
 
-    // print_r()
-
     $cloneOrder = clone($getOrderDataById);
 
-    $getOrderDataById->includeKey(["store","deliveryPerson"]);
-
-    // $getOrderDataById->includeKey("userOrdered");
+    $getOrderDataById->includeKey(["store","deliveryPerson","address"]);
 
     try {
         $orderData = $getOrderDataById->first();
-        
-        $deliveryManId  = $orderData->deliveryPerson->getObjectId();
-
         $cArr=[];
+        $sArr=[];
+        $currentLocation = [];
+
+        if($orderData->deliveryPerson){
+          $deliveryManId  = $orderData->deliveryPerson->getObjectId();
+          $currentLocation =(array) $orderData->deliveryPerson->get('currentLocation');
+        }
+        
+
+        if($orderData->address){
+          $userLocation =(array) $orderData->address->get("addressGeo");
+
+          if(count($userLocation)>0){
+
+            foreach ($userLocation as $key => $value) {
+              $userLocationKVArr[] = $value;
+            }
+            // print_r($userLocationKVArr);die;
+            $userLatitude  = $userLocationKVArr[0];
+            $userLongitude = $userLocationKVArr[1];
+          }
+        }
+        
+        // print_r($userLongitude);die;
         $storeName = $orderData->store->get('name');
-        $currentLocation =(array) $orderData->deliveryPerson->get('currentLocation');
+        
+        $currentStore = (array) $orderData->store->get('coordinate');
+
+        foreach($currentStore as $key=>$value){
+          $sArr[] = $value;
+        }
+
         foreach($currentLocation as $k=>$v){
           $cArr[] = $v;
         }
+
+        if(count($sArr)>0){
+          $sLatitude = $sArr[0];
+          $sLongitude = $sArr[1];
+        }
+
+        // print_r(ParseCloud::run("getAddress",'Public Read, jClDsoR8lL'));
+        // die;
+        // $ga = ParseCloud::run("getAddress", ["currentUser"=>$orderData->userOrdered->getObjectId()]);
+
+        // echo "<pre>";
+        
+        // print_r($ga[0]);
+
         if(count($cArr)>0){
           $latitude = $cArr[0];
           $longitude = $cArr[1];
         }
         $totalAmount = $orderData->get("amount");
         $orderNumber = $orderData->get("orderNumber");
+
     }catch(ParseException $ex){
         echo $ex->getMessage(); 
     }
+    
+    $routeResult =  ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$sLatitude,"originLongitude" =>$sLongitude]);
+
+    $resultArr = json_decode($routeResult);
+
+    if($resultArr->error){
+      $currentRoute = json_encode([[]]);
+    }else{
+      $routeArray = @$resultArr[1][0];
+      $currentRoute = json_encode($routeArray);
+    }
+
+    $userDriverRoute = ParseCloud::run("ORSdirection", ["destinationLatitude" => $latitude,"destinationLongitude" => $longitude,"originLatitude" =>$userLatitude,"originLongitude" =>$userLongitude]);
+    // echo "<pre>";
+    // print_r($userDriverRoute);die;
+    $userDriverRouteArr = json_decode($userDriverRoute);
+    if($userDriverRouteArr->error){
+      $driverToUserRoute =json_encode([[]]);
+    }else{
+      $driverToUserRoute = json_encode($userDriverRouteArr[1][0]);
+    }
+
 
     $menuQuery = new ParseQuery("OrdersMenu");
     $menuQuery->matchesQuery("orderId", $cloneOrder);
@@ -114,7 +172,6 @@
         $orderDetails = $menuQuery->find();
     } catch (\Throwable $th) {
         echo $th->getMessage();
-        //throw $th;
     }
 
     // $deliveryQuery = new ParseQuery('Driver');
@@ -129,10 +186,6 @@
     // } catch (\Throwable $th) {
     //   //throw $th;
     // }
-
-
-
-    // print_r($delivery[0]->currentLocation);die;
 
     $itemsHtml='';
 
@@ -161,12 +214,11 @@
 
     // $orderData = $getOrderDataById->get($orderMenu);
 
-    // echo "<pre>";
-    // print_r($itemsHtml);die;
+    // print_r($_SERVER['REQUEST_METHOD']); die;
 
         ?>
 
-<input type="hidden" id="orderId" value="<?= $_GET['order-id'] ?>" />
+    <input type="hidden" id="orderId" value="<?= $_GET['order-id'] ?>" />
 <!-- checkout Step 01 Section -->
 <section class="checkout_step_01 d-none">
     <div class="container py-5">
@@ -543,9 +595,12 @@
     </div>
     <div class="col-md-6 col-sm-12">
         
-        <img src="assets/map.png" class="img-fluid">
+        <!-- <img src="assets/map.png" class="img-fluid"> -->
+        <!-- <div class="mapDiv1"> -->
+          <div id='map1' class="map"></div>
+        <!-- </div> -->
         
-        <div class="row mt-5">
+        <!-- <div class="row mt-5">
             <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-indicators">
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -572,7 +627,8 @@
         <span class="visually-hidden">Next</span>
       </button>
     </div>
-        </div>
+        </div> -->
+
     </div>
     </div>
     </div>
@@ -713,12 +769,15 @@
         </div>
       </div>
       <div class="col-md-6 col-sm-12">
+        <!-- <div class="mapDiv2"> -->
+          <div id='map2' class="map"></div>
+        <!-- </div> -->
         <!-- <div id='map'></div> -->
         <!-- <img src="assets/map.png" class="img-fluid"> -->
         <!-- <hr> -->
         <!-- <div class="row"> -->
             <!-- <div class="col-sm-12 col-12"> -->
-                <div id='map'></div>
+                
             <!-- </div> -->
             <!-- <div class="col-sm-12">
 
@@ -763,372 +822,639 @@
     .checkoutFlash, .checkout_step_01{
         height: 83vh;
     }
-    #map {
-        position: absolute; top: 0; bottom: 0; width: 100%; 
-    }
+
     /* body{
         min-height: 83vh;
     } */
     /* Absolute Center Spinner */
-    .loading {
-      position: fixed;
-      z-index: 999;
-      height: 2em;
-      width: 2em;
-      overflow: show;
-      margin: auto;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-    }
+  .loading {
+    position: fixed;
+    z-index: 999;
+    height: 2em;
+    width: 2em;
+    overflow: show;
+    margin: auto;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
 
-    /* Transparent Overlay */
-    .loading:before {
-      content: '';
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
+  /* Transparent Overlay */
+  .loading:before {
+    content: '';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0, .8));
+    background: -webkit-radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0,.8));
+  }
+
+  /* :not(:required) hides these rules from IE9 and below */
+  .loading:not(:required) {
+    /* hide "loading..." text */
+    font: 0/0 a;
+    color: transparent;
+    text-shadow: none;
+    background-color: transparent;
+    border: 0;
+  }
+
+  .loading:not(:required):after {
+    content: '';
+    display: block;
+    font-size: 10px;
+    width: 1em;
+    height: 1em;
+    margin-top: -0.5em;
+    -webkit-animation: spinner 150ms infinite linear;
+    -moz-animation: spinner 150ms infinite linear;
+    -ms-animation: spinner 150ms infinite linear;
+    -o-animation: spinner 150ms infinite linear;
+    animation: spinner 150ms infinite linear;
+    border-radius: 0.5em;
+    -webkit-box-shadow: rgba(255,255,255, 0.75) 1.5em 0 0 0, rgba(255,255,255, 0.75) 1.1em 1.1em 0 0, rgba(255,255,255, 0.75) 0 1.5em 0 0, rgba(255,255,255, 0.75) -1.1em 1.1em 0 0, rgba(255,255,255, 0.75) -1.5em 0 0 0, rgba(255,255,255, 0.75) -1.1em -1.1em 0 0, rgba(255,255,255, 0.75) 0 -1.5em 0 0, rgba(255,255,255, 0.75) 1.1em -1.1em 0 0;
+  box-shadow: rgba(255,255,255, 0.75) 1.5em 0 0 0, rgba(255,255,255, 0.75) 1.1em 1.1em 0 0, rgba(255,255,255, 0.75) 0 1.5em 0 0, rgba(255,255,255, 0.75) -1.1em 1.1em 0 0, rgba(255,255,255, 0.75) -1.5em 0 0 0, rgba(255,255,255, 0.75) -1.1em -1.1em 0 0, rgba(255,255,255, 0.75) 0 -1.5em 0 0, rgba(255,255,255, 0.75) 1.1em -1.1em 0 0;
+  }
+
+  /* Animation */
+
+  @-webkit-keyframes spinner {
+    0% {
+      -webkit-transform: rotate(0deg);
+      -moz-transform: rotate(0deg);
+      -ms-transform: rotate(0deg);
+      -o-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      -moz-transform: rotate(360deg);
+      -ms-transform: rotate(360deg);
+      -o-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  @-moz-keyframes spinner {
+    0% {
+      -webkit-transform: rotate(0deg);
+      -moz-transform: rotate(0deg);
+      -ms-transform: rotate(0deg);
+      -o-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      -moz-transform: rotate(360deg);
+      -ms-transform: rotate(360deg);
+      -o-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  @-o-keyframes spinner {
+    0% {
+      -webkit-transform: rotate(0deg);
+      -moz-transform: rotate(0deg);
+      -ms-transform: rotate(0deg);
+      -o-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      -moz-transform: rotate(360deg);
+      -ms-transform: rotate(360deg);
+      -o-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes spinner {
+    0% {
+      -webkit-transform: rotate(0deg);
+      -moz-transform: rotate(0deg);
+      -ms-transform: rotate(0deg);
+      -o-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      -moz-transform: rotate(360deg);
+      -ms-transform: rotate(360deg);
+      -o-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  #map {
+     position: absolute; top: 0; bottom: 0; width: 100%;
+     }
+     .map{
       width: 100%;
-      height: 100%;
-        background: radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0, .8));
-
-      background: -webkit-radial-gradient(rgba(20, 20, 20,.8), rgba(0, 0, 0,.8));
+      height: 500px;
+     }
+  .mapboxgl-canvas{
+    /* width: 100% !important; */
+    /* height: 45% !important; */
+  }
+  .marker20, .marker11 {
+        background-image: url('images/car.jpeg');
+        background-size: cover;
+        width: 23px;;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
     }
-
-    /* :not(:required) hides these rules from IE9 and below */
-    .loading:not(:required) {
-      /* hide "loading..." text */
-      font: 0/0 a;
-      color: transparent;
-      text-shadow: none;
-      background-color: transparent;
-      border: 0;
+  /* .marker1 {
+        background-image: url('images/car.jpeg');
+        background-size: cover;
+        width: 23px;;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+    } */
+  .marker21 {
+        background-image: url('images/home.jpeg');
+        background-size: cover;
+        width: 40px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
     }
-
-    .loading:not(:required):after {
-      content: '';
-      display: block;
-      font-size: 10px;
-      width: 1em;
-      height: 1em;
-      margin-top: -0.5em;
-      -webkit-animation: spinner 150ms infinite linear;
-      -moz-animation: spinner 150ms infinite linear;
-      -ms-animation: spinner 150ms infinite linear;
-      -o-animation: spinner 150ms infinite linear;
-      animation: spinner 150ms infinite linear;
-      border-radius: 0.5em;
-      -webkit-box-shadow: rgba(255,255,255, 0.75) 1.5em 0 0 0, rgba(255,255,255, 0.75) 1.1em 1.1em 0 0, rgba(255,255,255, 0.75) 0 1.5em 0 0, rgba(255,255,255, 0.75) -1.1em 1.1em 0 0, rgba(255,255,255, 0.75) -1.5em 0 0 0, rgba(255,255,255, 0.75) -1.1em -1.1em 0 0, rgba(255,255,255, 0.75) 0 -1.5em 0 0, rgba(255,255,255, 0.75) 1.1em -1.1em 0 0;
-    box-shadow: rgba(255,255,255, 0.75) 1.5em 0 0 0, rgba(255,255,255, 0.75) 1.1em 1.1em 0 0, rgba(255,255,255, 0.75) 0 1.5em 0 0, rgba(255,255,255, 0.75) -1.1em 1.1em 0 0, rgba(255,255,255, 0.75) -1.5em 0 0 0, rgba(255,255,255, 0.75) -1.1em -1.1em 0 0, rgba(255,255,255, 0.75) 0 -1.5em 0 0, rgba(255,255,255, 0.75) 1.1em -1.1em 0 0;
-    }
-
-    /* Animation */
-
-    @-webkit-keyframes spinner {
-      0% {
-        -webkit-transform: rotate(0deg);
-        -moz-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
-        -o-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        -moz-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        -o-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-    @-moz-keyframes spinner {
-      0% {
-        -webkit-transform: rotate(0deg);
-        -moz-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
-        -o-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        -moz-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        -o-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-    @-o-keyframes spinner {
-      0% {
-        -webkit-transform: rotate(0deg);
-        -moz-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
-        -o-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        -moz-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        -o-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-    @keyframes spinner {
-      0% {
-        -webkit-transform: rotate(0deg);
-        -moz-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
-        -o-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        -moz-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        -o-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    .mapboxgl-canvas{
-      width: 100% !important;
-      height: 45% !important;
+  .marker10 {
+        background-image: url('images/bekary.jpeg');
+        background-size: cover;
+        width: 28px;
+        height: 25px;
+        border-radius: 50%;
+        cursor: pointer;
     }
 </style>
 
 <script>
-    // $(window).on('load', function(){
+  $('.loadingDiv').addClass('loading');
+
+    // Live query code here
+  
+  // $(document).ready(function(){
+  window.addEventListener("DOMContentLoaded", function() {
+      // $('.d-none').removeClass('d-none');
+      function processingInstance(){
+          $(".checkout_step_01").addClass('d-none');
+          $(".checkoutFlash").addClass('d-none');
+          $(".checkout_step_03").addClass('d-none');
+          $(".checkout_step_04").addClass('d-none');
+          $(".checkout_step_05").addClass('d-none');
+          $(".checkout_step_02").removeClass('d-none');
+          console.log("called");
+      }
       
-        $('.loadingDiv').addClass('loading');
-    // })
-// Live query code here
-$(document).ready(function(){
-    // $('.d-none').removeClass('d-none');
-    function processingInstance(){
-        $(".checkout_step_01").addClass('d-none');
-        $(".checkoutFlash").addClass('d-none');
-        $(".checkout_step_03").addClass('d-none');
-        $(".checkout_step_04").addClass('d-none');
-        $(".checkout_step_05").addClass('d-none');
-        $(".checkout_step_02").removeClass('d-none');
-        console.log("called");
-    }
-    
-    function showHideByStatus(status){
-
-        if(status == "IN_PROGRESS"){
-            // alert(status);
-            $(".checkout_step_01").addClass('d-none');
-            $(".checkout_step_03").addClass('d-none');
-            $(".checkout_step_04").addClass('d-none');
-            $(".checkout_step_02").addClass('d-none');
-            $(".checkout_step_05").addClass('d-none');
-            $(".checkoutFlash").removeClass('d-none');
-            
-            setTimeout(processingInstance,4000)
-
-        }else if(status == "PICKUP_READY"){
-
-            // $(".checkout_step_01").addClass('d-none');
-            // $(".checkoutFlash").addClass('d-none');
-            // $(".checkout_step_03").addClass('d-none');
-            // $(".checkout_step_04").addClass('d-none');
-
-            // $(".checkout_step_02").removeClass('d-none');
-            $(".checkout_step_01").addClass('d-none');
-            $(".checkoutFlash").addClass('d-none');
-            $(".checkout_step_02").addClass('d-none');
-            $(".checkout_step_04").addClass('d-none');
-            $(".checkout_step_05").addClass('d-none');
-
-            $(".checkout_step_03").removeClass('d-none');
-
-        }else if(status == "IN_ROUTE"){
-            
-            $(".checkout_step_01").addClass('d-none');
-            $(".checkoutFlash").addClass('d-none');
-            $(".checkout_step_02").addClass('d-none');
-            $(".checkout_step_03").addClass('d-none');
-            $(".checkout_step_05").addClass('d-none');
-            
-            $(".checkout_step_04").removeClass('d-none');
-
-        }else if(status == "LAST_MILE"){
-
-            $(".checkout_step_01").addClass('d-none');
-            $(".checkoutFlash").addClass('d-none');
-            $(".checkout_step_02").addClass('d-none');
-            $(".checkout_step_03").addClass('d-none');
-            $(".checkout_step_04").addClass('d-none');
-            // $(".deliveryMan").html(deliveryMan);
-            $(".checkout_step_05").removeClass('d-none');
-        }else{
-            // console.log(status +" 1213");
-            $(".checkout_step_03").addClass('d-none');
-            $(".checkout_step_04").addClass('d-none');
-            $(".checkout_step_02").addClass('d-none');
-            $(".checkoutFlash").addClass('d-none');
-
-            $(".checkout_step_01").removeClass('d-none');
-        }
+      function showHideByStatus(status){
 
         console.log(status);
-    }
+          if(status == "IN_PROGRESS"){
+              // alert(status);
+              $(".checkout_step_01").addClass('d-none');
+              $(".checkout_step_03").addClass('d-none');
+              $(".checkout_step_04").addClass('d-none');
+              $(".checkout_step_02").addClass('d-none');
+              $(".checkout_step_05").addClass('d-none');
+              $(".checkoutFlash").removeClass('d-none');
+              
+              setTimeout(processingInstance,4000)
 
-    const orderId = $("#orderId").val();
-    const deliveryMan = "<?=$deliveryManId?>"
+          }else if(status == "PICKUP_READY"){
 
-    const AppID = '9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB';
-    const JavaScriptKey = 'YBzS9s1lJWyWKc1Ys0rAA2gL70l9464SIpGoVr92';
-    const LiveQuerySubDomain = 'ezata.b4a.io';
-    var lat; var long;
+              // $(".checkout_step_01").addClass('d-none');
+              // $(".checkoutFlash").addClass('d-none');
+              // $(".checkout_step_03").addClass('d-none');
+              // $(".checkout_step_04").addClass('d-none');
 
-     /* Ininialize Parse */
-    Parse.initialize(AppID, JavaScriptKey);
-    Parse.serverURL = "https://parseapi.back4app.com/";
-    
-    /* Get Data From Product Table */ 
+              // $(".checkout_step_02").removeClass('d-none');
+              $(".checkout_step_01").addClass('d-none');
+              $(".checkoutFlash").addClass('d-none');
+              $(".checkout_step_02").addClass('d-none');
+              $(".checkout_step_04").addClass('d-none');
+              $(".checkout_step_05").addClass('d-none');
 
-    async function getOrderData() {
-        const innerQueryState = new Parse.Query("Driver");
-        // Query City class
-        const outerQueryCity = new Parse.Query("Orders");
+              $(".checkout_step_03").removeClass('d-none');
 
-        // Match the State query by the "state" property
-        
-        outerQueryCity.matchesQuery("deliveryPerson", innerQueryState);
+          }else if(status == "IN_ROUTE"){
+              $(".checkout_step_01").addClass('d-none');
+              $(".checkoutFlash").addClass('d-none');
+              $(".checkout_step_02").addClass('d-none');
+              $(".checkout_step_03").addClass('d-none');
+              $(".checkout_step_05").addClass('d-none');
+              
+              $(".checkout_step_04").removeClass('d-none');
 
-        // Include the "state" property so we can have the content of the State object as well
-        outerQueryCity.include("deliveryPerson");
-        try {
-            let outerQueryResults = await outerQueryCity.get(orderId);
-            $('.loadingDiv').removeClass('loading');
-            let orderStatus = outerQueryResults.get("orderStatus");
-            let deliveryMan = outerQueryResults.get("deliveryPerson").get("name");
-            $(".deliveryMan").html(deliveryMan);
-            
-            let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation")
+          }else if(status == "LAST_MILE"){
 
-              lat = deliveryCurrentLocation._latitude;
-              long = deliveryCurrentLocation._longitude;
-              // setMarker(lat,long)
-            // console.log(long);
+              $(".checkout_step_01").addClass('d-none');
+              $(".checkoutFlash").addClass('d-none');
+              $(".checkout_step_02").addClass('d-none');
+              $(".checkout_step_03").addClass('d-none');
+              $(".checkout_step_04").addClass('d-none');
+              // $(".deliveryMan").html(deliveryMan);
+              $(".checkout_step_05").removeClass('d-none');
+          }else{
+              // console.log(status +" 1213");
+              $(".checkout_step_03").addClass('d-none');
+              $(".checkout_step_04").addClass('d-none');
+              $(".checkout_step_02").addClass('d-none');
+              $(".checkoutFlash").addClass('d-none');
 
-            showHideByStatus(orderStatus ,deliveryMan);
-            setMarker(lat,long)
-        } catch (error) {
-            console.log(`Failed to query object: ${error.message}`);
-            return false;
-        }
-    }
+              $(".checkout_step_01").removeClass('d-none');
+          }
 
-    let callOrderData = getOrderData();
-
-    /* Start Live Query */
-    /* Set Client */
-    var client = new Parse.LiveQueryClient({
-        applicationId: AppID,
-        serverURL: 'wss://' + LiveQuerySubDomain,
-        javascriptKey: JavaScriptKey
-    });
-    client.open();
-
-    /* Subscribe Query */
-    var query = new Parse.Query('Orders');
-    query.equalTo("objectId", orderId);
-    var orders = client.subscribe(query);
-
-    /* Update Events */
-    orders.on('update', (product) => {
-        getOrderData();
-        // document.querySelector('#lq_console').innerHTML = 'Product ID: '+product.id;
-        console.log('Product updated');
-        console.log(product.id);
-    });
-
-    // Live query 2
-    var delivery = new Parse.Query('Driver');
-    delivery.equalTo("objectId", deliveryMan);
-    var drivers = delivery.subscribe(delivery);
-
-    drivers.on('update',(driver) =>{
-      console.log("test ttttt")
-    });
-
-
-    const latitude = Number('<?=$latitude?>');
-    const longitude = Number('<?=$longitude?>');
-
-    console.log("cnst lN "+latitude +' '+ longitude)
-
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZWx0ZWNoIiwiYSI6ImNremt0eXVqNjR5ZWMybm5rNXRwZmI1NDYifQ.1iDgFDm_Npwwajyaf-WJAQ';
-
-    const map = new mapboxgl.Map({
-      container: 'map',
-      // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [longitude,latitude],
-      zoom: 5
-    });
-
-    function setMarker(lat, long) {
-        console.log(lat +' '+ long);
-    }
-
-    const geojson = {
-        'type': 'FeatureCollection',
-        'features': [
-              {
-                  'type': 'Feature',
-                  'properties': {
-                      'message': 'Foo',
-                      'iconSize': [60, 60]
-                  },
-                  'geometry': {
-                      'type': 'Point',
-                      'coordinates': [ longitude, latitude]
-                  }
-              },
-            
-          ]
-      };
-
-
-
-    for (const marker of geojson.features) {
-      
-      const marker = new mapboxgl.Marker()
-        .setLngLat([ longitude, latitude])
-        .addTo(map);
-
-        // const el = document.createElement('div');
-        // const width = marker.properties.iconSize[0];
-        // const height = marker.properties.iconSize[1];
-        // el.className = 'marker';
-        // el.style.backgroundImage = `url(https://placekitten.com/g/${width}/${height}/)`;
-        // el.style.width = `${width}px`;
-        // el.style.height = `${height}px`;
-        // el.style.backgroundSize = '100%';
-
+          console.log(status);
       }
-        // Create a DOM element for each marker.
-        
+
+      const orderId = $("#orderId").val();
+      const deliveryMan = "<?=$deliveryManId?>"
+      let deliveryManName;
+
+      const AppID = '9ONzVfqhJ8XvsDSthjVg6cf86Gg1I1HD4RIue3VB';
+      const JavaScriptKey = 'YBzS9s1lJWyWKc1Ys0rAA2gL70l9464SIpGoVr92';
+      const LiveQuerySubDomain = 'ezata.b4a.io';
+      var lat; var long; var hLat; var hLong; var cLa; var cLo; var userLat; var userLong;
+
+      /* Ininialize Parse */
+      Parse.initialize(AppID, JavaScriptKey);
+      Parse.serverURL = "https://parseapi.back4app.com/";
+      
+      /* Get Data From Product Table */
+      async function getOrderData() {
+          const innerQueryDriver = new Parse.Query("Driver");
+
+          const innerQueryStore = new Parse.Query("Store"); 
+
+          // Query City class
+          const outerQueryOrder = new Parse.Query("Orders");
+
+          // Match the State query by the "state" property
+          
+          // outerQueryOrder.matchesQuery("deliveryPerson", innerQueryDriver);
+
+          outerQueryOrder.matchesQuery("store", innerQueryStore);
+
+          // Include the "state" property so we can have the content of the State object as well
+          outerQueryOrder.include("deliveryPerson");
+
+          outerQueryOrder.include("store");
+          try {
+              let outerQueryResults = await outerQueryOrder.get(orderId);
+              $('.loadingDiv').removeClass('loading');
+              let orderStatus = outerQueryResults.get("orderStatus");
+              let deliveryManName = '';
+
+              // console.log(outerQueryResults.get("deliveryPerson"));die;
+
+              if(outerQueryResults.get("deliveryPerson")){
+                deliveryManName = outerQueryResults.get("deliveryPerson").get("name");
+
+                let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation");
+
+                  lat = deliveryCurrentLocation._latitude;
+                  long = deliveryCurrentLocation._longitude;
+              }
+              
+              $(".deliveryMan").html(deliveryManName);
+              
+
+              let storeCurrentLocation = outerQueryResults.get("store").get("coordinate");
+              
+                hLat = storeCurrentLocation._latitude;
+                hLong = storeCurrentLocation._longitude;
+
+                userLat = "<?=$userLatitude ?>";
+                userLong = "<?=$userLongitude ?>";
+
+
+
+              // console.table([userLat,userLong])
+
+              showHideByStatus(orderStatus);
+       
+              switch (orderStatus) {
+                case "IN_ROUTE":
+                  setGeo1(lat,long ,deliveryManName, hLat, hLong);
+                case "LAST_MILE": 
+                  setGeo2(lat,long ,deliveryManName, userLat, userLong);
+                break;
+              
+                default:
+                  break;
+              }
+
+          } catch (error) {
+              console.log(`Failed to query object: ${error.message}`);
+              return false;
+          }
+      }
+
+      const generateRoute = async( deliveryLat, deliveryLong, targetedLat, targetedLong, deliveryMan, method) =>{
+        const url = "create-route.php";
+        await $.ajax({
+          url:url,
+          type:"POST",
+          data:{deliveryLat, deliveryLong, targetedLat, targetedLong},
+          success:function(response){
+            // console.log(response);
+            return response;
+          }
+        });
+      }
       
 
-        // el.addEventListener('click', () => {
-        //     window.alert(marker.properties.message);
-        // });
+      let callOrderData = getOrderData();
+      /* Start Live Query */
+      /* Set Client */
+      var client = new Parse.LiveQueryClient({
+          applicationId: AppID,
+          serverURL: 'wss://' + LiveQuerySubDomain,
+          javascriptKey: JavaScriptKey
+      });
+      client.open();
 
-})
-// Live query code End
+      /* Subscribe Query */
+      var query = new Parse.Query('Orders');
+      query.equalTo("objectId", orderId);
+      var orders = client.subscribe(query);
+
+      /* Update Events for order update*/
+      orders.on('update', (product) => {
+          getOrderData();
+          console.log(product.id);
+      });
+
+      var delivery = new Parse.Query('Driver');
+      delivery.equalTo("objectId", deliveryMan);
+      var drivers = client.subscribe(delivery);
+
+      /* Update Events for delivery man update*/
+      drivers.on('update',(driver) =>{
+        getOrderData();
+      });
+
+      const latitude = Number('<?=$latitude?>');
+      const longitude = Number('<?=$longitude?>');
+
+      mapboxgl.accessToken = 'pk.eyJ1IjoiYm5kZXIxIiwiYSI6ImNrbXh3b21yazB0YmYyd24xNjRhYTV0YWQifQ.lJu4Dhua5IDcKKiSaozj4g';
+      // var geojson;
+
+      var map1 = new mapboxgl.Map({
+          // container: 'map1',
+          // style: 'mapbox://styles/mapbox/streets-v11',
+          // center: [longitude, latitude],
+          // zoom: 8
+          container: 'map1',
+          style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+          center: [longitude, latitude], // starting position [lng, lat]
+          zoom: 12 // starting zoom
+      });
+
+      var map2 = new mapboxgl.Map({
+        container: 'map2',
+        style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+        center: [longitude, latitude], // starting position [lng, lat]
+        zoom: 12 // starting zoom
+      });
+
+      function setGeo(lat, log, deliveryManName) {
+       let geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [log, lat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            },
+            {
+              'type': 'Hotel',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [38.75940654426813, 8.941962235917899]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            }
+          ]
+        };
+
+          // add markers to map
+        geojson.features.forEach(function (marker) {
+          
+          $('.marker1').remove();
+            // create a HTML element for each feature
+            var el = document.createElement('div');
+            el.className = 'marker1';
+
+            // make a marker for each feature and add it to the map
+            new mapboxgl.Marker(el)
+              .setLngLat(marker.geometry.coordinates)
+              .setPopup(
+                new mapboxgl.Popup({ offset: 25 }) // add popups
+                  .setHTML(
+                    '<h6>Your order is on the way now</h6><p>' +
+                    deliveryManName  +
+                      'is now on the way </p>'
+                  )
+              )
+              .addTo(map);
+        });
+       
+        map.resize();
+      }
+      let r;
+
+      function setGeo1(lat, log, deliveryManName, hLat, hLong) {
+        
+        cLa = (lat + hLat) / 2;
+        cLo = (log + hLong) / 2;
+        $('.marker11').remove();
+
+        let geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [log, lat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            },
+            {
+              'type': 'Hotel',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [hLong, hLat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            }
+          ]
+        };
+
+        var coords;
+        coords = "<?= $currentRoute ?>";
+        coords = JSON.parse(coords);
+        // console.log(coords);
+
+        const route = {
+        'type': 'FeatureCollection',
+          'features': [
+            {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'LineString',
+              'coordinates': coords
+              }
+            }
+          ]
+        };
+
+        map1.on('load', () => {
+          map1.addSource('route', {
+            'type': 'geojson',
+            'data': route
+          });
+
+          map1.addLayer({
+              'id': 'route',
+              'source': 'route',
+              'type': 'line',
+              'paint': {
+                  'line-width': 2,
+                  'line-color': '#007cbf'
+              }
+          });
+          
+        });
+        
+        // add markers to map
+        geojson.features.forEach(function (marker, i) {
+            // create a HTML element for each feature
+            var el = document.createElement('div');
+            el.className = 'marker marker1 marker1'+i;
+
+            // make a marker for each feature and add it to the map
+            new mapboxgl.Marker(el)
+              .setLngLat(marker.geometry.coordinates)
+              .addTo(map1);
+        });
+        
+        map1.resize();
+      }
+
+      function setGeo2(lat, log, deliveryManName, hLat, hLong) {
+        cLa = (lat + hLat) / 2;
+        cLo = (log + hLong) / 2;
+        $('.marker20').remove();
+
+        let geojson = {
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [log, lat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            },
+            {
+              'type': 'Hotel',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [hLong, hLat]
+              },
+              'properties': {
+                'title': 'Mapbox',
+                'description': 'Washington, D.C.'
+              }
+            }
+          ]
+        };
+
+        // let coords = generateRoute(lat,long, hLat, hLong)
+        // console.log(generateRoute(lat,long, hLat, hLong));
+
+        var coords2;
+        coords2 = "<?= $driverToUserRoute ?>";
+        coords2 = JSON.parse(cords);
+
+        const route = {
+        'type': 'FeatureCollection',
+          'features': [
+            {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'LineString',
+              'coordinates': coords2
+              }
+            }
+          ]
+        };
+
+        map2.on('load', () => {
+          map2.addSource('route', {
+            'type': 'geojson',
+            'data': route
+          });
+
+          map2.addLayer({
+              'id': 'route',
+              'source': 'route',
+              'type': 'line',
+              'paint': {
+                  'line-width': 2,
+                  'line-color': '#007cbf'
+              }
+          });
+        });
+        
+        // add markers to map
+        geojson.features.forEach(function (marker, i) {
+          // console.log(marker +" Marker ");
+            // create a HTML element for each feature
+            var el = document.createElement('div');
+            el.className = 'marker marker2 marker2'+i;
+
+            // make a marker for each feature and add it to the map
+            new mapboxgl.Marker(el)
+              .setLngLat(marker.geometry.coordinates)
+              .addTo(map2);
+        });
+        
+        map2.resize();
+      }
+ 
+  });
+  // Live query code End
 
 </script>
 
 <?php endif;?>
- <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+ <!-- <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script> -->
  <script src="https://unpkg.com/parse@3.4.3/dist/parse.min.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
-<?php include 'footer.php'; ?>
+<?php include 'footer.php'?>

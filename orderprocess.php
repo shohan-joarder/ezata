@@ -80,6 +80,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
     $getOrderDataById->includeKey(["store","deliveryPerson","address"]);
 
     try {
+      
         $orderData = $getOrderDataById->first();
         $cArr=[];
         $sArr=[];
@@ -122,6 +123,8 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           $sLatitude = $sArr[0];
           $sLongitude = $sArr[1];
         }
+
+        $firstRoute =  ParseCloud::run("ORSdirection", ["destinationLatitude" => $sLatitude,"destinationLongitude" => $sLongitude,"originLatitude" =>'9.024596491360029',"originLongitude" =>'38.678738102316856']);
 
         // print_r(ParseCloud::run("getAddress",'Public Read, jClDsoR8lL'));
         // die;
@@ -1006,14 +1009,14 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           $(".checkout_step_04").addClass('d-none');
           $(".checkout_step_05").addClass('d-none');
           $(".checkout_step_02").removeClass('d-none');
-          console.log("called");
+          // console.log("called");
       }
       
       function showHideByStatus(status){
 
-        console.log(status);
+        // console.log(status);
           if(status == "IN_PROGRESS"){
-              // alert(status);
+
               $(".checkout_step_01").addClass('d-none');
               $(".checkout_step_03").addClass('d-none');
               $(".checkout_step_04").addClass('d-none');
@@ -1025,12 +1028,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
 
           }else if(status == "PICKUP_READY"){
 
-              // $(".checkout_step_01").addClass('d-none');
-              // $(".checkoutFlash").addClass('d-none');
-              // $(".checkout_step_03").addClass('d-none');
-              // $(".checkout_step_04").addClass('d-none');
-
-              // $(".checkout_step_02").removeClass('d-none');
               $(".checkout_step_01").addClass('d-none');
               $(".checkoutFlash").addClass('d-none');
               $(".checkout_step_02").addClass('d-none');
@@ -1040,6 +1037,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               $(".checkout_step_03").removeClass('d-none');
 
           }else if(status == "IN_ROUTE"){
+
               $(".checkout_step_01").addClass('d-none');
               $(".checkoutFlash").addClass('d-none');
               $(".checkout_step_02").addClass('d-none');
@@ -1067,7 +1065,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               $(".checkout_step_01").removeClass('d-none');
           }
 
-          console.log(status);
+          // console.log(status);
       }
 
       const orderId = $("#orderId").val();
@@ -1083,9 +1081,27 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       Parse.initialize(AppID, JavaScriptKey);
       Parse.serverURL = "https://parseapi.back4app.com/";
       
+      const generateRoute =async ( deliveryLat, deliveryLong, targetedLat, targetedLong, deliveryMan, method) =>{
+        const url = "create-route.php";
+        await $.ajax({
+          url:url,
+          type:"POST",
+          data:{deliveryLat, deliveryLong, targetedLat, targetedLong},
+          success:function(response){
+            // console.log(response);
+            
+            method( deliveryLat, deliveryLong,deliveryMan,targetedLat, targetedLong,response )
+            return response;
+          }
+        });
+      }
+
       /* Get Data From Product Table */
       async function getOrderData() {
+
           const innerQueryDriver = new Parse.Query("Driver");
+
+          const innerQueryAddress = new Parse.Query("Address");
 
           const innerQueryStore = new Parse.Query("Store"); 
 
@@ -1102,6 +1118,10 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           outerQueryOrder.include("deliveryPerson");
 
           outerQueryOrder.include("store");
+
+          outerQueryOrder.include("address");
+
+
           try {
               let outerQueryResults = await outerQueryOrder.get(orderId);
               $('.loadingDiv').removeClass('loading');
@@ -1111,14 +1131,22 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               // console.log(outerQueryResults.get("deliveryPerson"));die;
 
               if(outerQueryResults.get("deliveryPerson")){
+
                 deliveryManName = outerQueryResults.get("deliveryPerson").get("name");
-
                 let deliveryCurrentLocation = outerQueryResults.get("deliveryPerson").get("currentLocation");
-
                   lat = deliveryCurrentLocation._latitude;
                   long = deliveryCurrentLocation._longitude;
               }
+
+              if(outerQueryResults.get("address")){
               
+                let userAddressGeo = outerQueryResults.get("address").get('addressGeo');
+                userLat = userAddressGeo._latitude;
+                userLong = userAddressGeo._longitude;
+
+              }
+
+
               $(".deliveryMan").html(deliveryManName);
               
 
@@ -1127,18 +1155,23 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
                 hLat = storeCurrentLocation._latitude;
                 hLong = storeCurrentLocation._longitude;
 
-                userLat = "<?=$userLatitude ?>";
-                userLong = "<?=$userLongitude ?>";
-
-              // console.table([userLat,userLong])
+              // console.table([userLat,userLong]);return false;
 
               showHideByStatus(orderStatus);
-              
+              // console.log(document.URL)
+              // setGeo1(lat,long ,deliveryManName, hLat, hLong);
+              // setGeo2(lat,long ,deliveryManName, userLat, userLong);
+
+              // if(orderStatus == "IN_ROUTE" || orders == "LAST_MILE"){
+                
+              // }
               switch (orderStatus) {
+                
                 case "IN_ROUTE":
-                  setGeo1(lat,long ,deliveryManName, hLat, hLong);
+                  generateRoute(lat, long, hLat, hLong, deliveryManName, setGeo1)
                 case "LAST_MILE": 
-                  setGeo2(lat,long ,deliveryManName, userLat, userLong);
+                  // console.log("last mile")
+                  generateRoute(lat, long, userLat, userLong, deliveryManName, setGeo2);
                 break;
               
                 default:
@@ -1169,7 +1202,6 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       /* Update Events for order update*/
       orders.on('update', (product) => {
           getOrderData();
-          console.log(product.id);
       });
 
       var delivery = new Parse.Query('Driver');
@@ -1185,14 +1217,9 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       const longitude = Number('<?=$longitude?>');
 
       mapboxgl.accessToken = 'pk.eyJ1IjoiYm5kZXIxIiwiYSI6ImNrbXh3b21yazB0YmYyd24xNjRhYTV0YWQifQ.lJu4Dhua5IDcKKiSaozj4g';
-      
       // var geojson;
 
       var map1 = new mapboxgl.Map({
-          // container: 'map1',
-          // style: 'mapbox://styles/mapbox/streets-v11',
-          // center: [longitude, latitude],
-          // zoom: 8
           container: 'map1',
           style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
           center: [longitude, latitude], // starting position [lng, lat]
@@ -1203,7 +1230,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         container: 'map2',
         style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
         center: [longitude, latitude], // starting position [lng, lat]
-        zoom: 12 // starting zoom
+        zoom: 14 // starting zoom
       });
 
       function setGeo(lat, log, deliveryManName) {
@@ -1259,10 +1286,10 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
        
         map.resize();
       }
-
       let r;
 
-      function setGeo1(lat, log, deliveryManName, hLat, hLong) {
+      function setGeo1(lat, log, deliveryManName, hLat, hLong, res) {
+        // console.table(["map1",res]);
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
         $('.marker11').remove();
@@ -1296,8 +1323,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         };
 
         var coords;
-        coords = "<?= $currentRoute ?>";
-        coords = JSON.parse(coords);
+        coords = JSON.parse(res);
         // console.log(coords);
 
         const route = {
@@ -1313,7 +1339,20 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           ]
         };
 
-        map1.on('load', () => {
+        console.log("Before Map Load");
+
+        if (map1.getLayer('route')) {
+          map1.removeLayer('route');
+        }
+        if (map1.getSource('route')) {
+          map1.removeSource('route');
+        }
+
+        //map1.on('load', () => {
+
+          console.log("Update");
+          console.log(route);
+
           map1.addSource('route', {
             'type': 'geojson',
             'data': route
@@ -1329,7 +1368,9 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               }
           });
           
-        });
+        //});
+
+        
         
         // add markers to map
         geojson.features.forEach(function (marker, i) {
@@ -1344,11 +1385,25 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         });
         
         map1.resize();
+
+        //map1.getSource('route').setData(route);
+
       }
 
-      function setGeo2(lat, log, deliveryManName, hLat, hLong) {
+      function setGeo2(lat, log, deliveryManName, hLat, hLong, res) {
+        // console.table(["map2",res, 'TRUE']);
+        // console.log( typeof(JSON.parse(res)));
+        // return false;
         cLa = (lat + hLat) / 2;
         cLo = (log + hLong) / 2;
+
+        if (map2.getLayer('route')) {
+          map2.removeLayer('route');
+        }
+        if (map2.getSource('route')) {
+          map2.removeSource('route');
+        }
+
         $('.marker20').remove();
 
         let geojson = {
@@ -1359,6 +1414,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               'geometry': {
                 'type': 'Point',
                 'coordinates': [log, lat]
+                // 'coordinates': [log, lat]
               },
               'properties': {
                 'title': 'Mapbox',
@@ -1380,39 +1436,46 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         };
 
         var coords2;
-        coords2 = "<?= $driverToUserRoute ?>";
-        coords2 = JSON.parse(coords2);
+        coords2 = JSON.parse(res);
 
-        const route = {
-        'type': 'FeatureCollection',
-          'features': [
-            {
-            'type': 'Feature',
-            'geometry': {
-              'type': 'LineString',
-              'coordinates': coords2
-              }
-            }
-          ]
-        };
+        console.log(typeof  coords2)
 
-        map2.on('load', () => {
-          map2.addSource('route', {
-            'type': 'geojson',
-            'data': route
-          });
+        // setTimeout(()=>{
+          const route = {
+            'type': 'FeatureCollection',
+              'features': [
+                {
+                'type': 'Feature',
+                'geometry': {
+                  'type': 'LineString',
+                  'coordinates': coords2
+                  }
+                }
+              ]
+            };
 
-          map2.addLayer({
-              'id': 'route',
-              'source': 'route',
-              'type': 'line',
-              'paint': {
-                  'line-width': 2,
-                  'line-color': '#007cbf'
-              }
-          });
-          
-        });
+            // map2.on('load', () => {
+              map2.addSource('route', {
+                'type': 'geojson',
+                'data': route
+              });
+
+              map2.addLayer({
+                  'id': 'route',
+                  'source': 'route',
+                  'type': 'line',
+                  'paint': {
+                        'line-width': 2,
+                        'line-color': '#007cbf'
+                    }
+                });
+              // });
+
+           
+
+        // },5000)
+
+     
         
         // add markers to map
         geojson.features.forEach(function (marker, i) {
@@ -1429,9 +1492,30 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
         
         map2.resize();
       }
+
+      
+      // map2.on('draw.update', sourceRefresh);
+      // function sourceRefresh(e) {
+      //     var data = draw.getAll();
+      //     map2.getSource('fields').setData(data);
+      // };
+
+      // map1.on('draw.update', sourceRefresh1);
+      // function sourceRefresh1(e) {
+      //     var data = draw.getAll();
+      //     map1.getSource('fields').setData(data);
+      // };
+
+      // let Clat = "<?= $sLatitude?>";
+      // let Clong = "<?= $sLongitude?>";
+      // let Croute = "<?= $firstRoute ?>";
+      // setGeo1(Clat, Clong, 'abc', Clat, Clong, Croute);
+      // setGeo2(Clat, Clong, 'abc', Clat, Clong, Croute);
+      
  
   });
   // Live query code End
+
 
 </script>
 
