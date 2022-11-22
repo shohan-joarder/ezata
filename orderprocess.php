@@ -1223,15 +1223,19 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
           container: 'map1',
           style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
           center: [longitude, latitude], // starting position [lng, lat]
-          zoom: 12 // starting zoom
+          zoom: 11 // starting zoom
       });
 
-      var map2 = new mapboxgl.Map({
-        container: 'map2',
-        style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
-        center: [longitude, latitude], // starting position [lng, lat]
-        zoom: 14 // starting zoom
-      });
+      var map2;
+      const map2Init = (long, lat)=>{
+        map2 = new mapboxgl.Map({
+          container: 'map2',
+          style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+          center: [long, lat], // starting position [lng, lat]
+          zoom: 10 // starting zoom
+        });
+      }
+      map2Init(longitude,latitude)
 
       function setGeo(lat, log, deliveryManName) {
        let geojson = {
@@ -1350,8 +1354,8 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
 
         //map1.on('load', () => {
 
-          console.log("Update");
-          console.log(route);
+          // console.log("Update");
+          // console.log(route);
 
           map1.addSource('route', {
             'type': 'geojson',
@@ -1383,7 +1387,7 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               .setLngLat(marker.geometry.coordinates)
               .addTo(map1);
         });
-        
+        map2.setCenter();
         map1.resize();
 
         //map1.getSource('route').setData(route);
@@ -1391,6 +1395,13 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
       }
 
       function setGeo2(lat, log, deliveryManName, hLat, hLong, res) {
+        // map2Init(log,lat);
+        // var map2 = new mapboxgl.Map({
+        //   container: 'map2',
+        //   style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+        //   center: [longitude, latitude], // starting position [lng, lat]
+        //   zoom: 14 // starting zoom
+        // });
         // console.table(["map2",res, 'TRUE']);
         // console.log( typeof(JSON.parse(res)));
         // return false;
@@ -1489,8 +1500,10 @@ if(isset($_GET['order-id']) && @$_GET['order-id']!=''):
               .setLngLat(marker.geometry.coordinates)
               .addTo(map2);
         });
-        
+        map2.setCenter();
         map2.resize();
+        
+        
       }
 
       
