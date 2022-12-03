@@ -12,9 +12,12 @@
     <!-- Favicons -->
     <link rel="shortcut icon" href="#">
     <!-- Page Title -->
-    <title>ezata Delivery</title>
+    <title>Ezata Delivery</title>
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="css/bootstrap.min.css"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,700,900" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -244,6 +247,26 @@ function rem(){
 </head>
 
 <body>
+  <?php 
+
+    $addressOptions = '<option value="">Select your address...</option>';
+
+   
+
+    // print_r($addressOptions);die;
+    // $userId = $_SESSION["userObjId"];
+    // $userData = new ParseQuery('User');
+    // $userData->equalTo("objectId", $_SESSION["userObjId"]);
+
+    // $userData->equalTo('objectId',$userId);
+    // echo "<pre>";
+    // print_r($userData->find());die;
+     
+    //  $addressQuery = new ParseQuery("Address");
+    //  $addressQuery->equalTo("user", 'jFhJ7jpXsJ');
+    //  echo "<pre>";
+    //  print_r($addressQuery->find());die;
+  ?>
     <div class="loadingDiv"></div>
     <!--============================= HEADER =============================-->
     <div class="dark-bg sticky-top" id="cart_list">
@@ -252,9 +275,108 @@ function rem(){
                 <div class="col-md-12">
                     <nav class="navbar navbar-expand-lg navbar-light">
                         <a class="navbar-brand" href="index.php">ezata</a>
+                       
+
+                        <div class="dropdown">
+                          <a type="button" class="dropdown-toggle text-white text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                          Deliver To
+                          </a>
+                          <div class="dropdown-menu p-4" style="left:auto; right:0; background:white; height:auto; overflow:auto; padding: 20px;padding-top: 30px; right:-150px">
+                          <?php 
+                                  session_start();
+                                  if( isset($_SESSION["isLoggedIn"]) && $_SESSION["isLoggedIn"] == true):
+                                    $query2 = new ParseQuery("Address");
+                                    $query2->includeKey('user');
+                                    $userId = $_SESSION["userObjId"];
+                                    try {
+                                      $addressQueryData = $query2->find();
+                                
+                                      foreach ($addressQueryData as $key => $value) {
+                                       
+                                        if($value->user){
+                                          if($value->user->getObjectId() === @$userId){
+                                            $addressGeo = (array) $value->addressGeo;
+                                            $geo = '';
+                                            foreach ($addressGeo as $key => $v) {
+                                              $geo .= $v.', ' ;
+                                            }
+                                            $geo = substr($geo, 0, -2);
+                                            $selected  = '';
+                                            if(isset($_GET["cords"])){
+                                              $cordsData = $_GET["cords"];
+                                              $selected = $cordsData == $geo ? "selected":'';
+                                            }
+                                              
+                                              $addressOptions .= '<option '.$selected.' value="'.$geo.'" >'.$value->street.'</option>';
+                                            }
+                                          }
+                                      }
+                                
+                                      // print_r($addressOptions);die;
+                                      
+                                    } catch (ParseException $ex) {
+                                      echo $ex->getMessage();
+                                    }
+
+                                ?>
+                                <select name="savedAddress" class="form-control" id="savedAddress">
+                                  <?=$addressOptions ?>
+                                </select>
+                                <?php endif; ?>
+                                  <li class="pt-3"><h6 class="text-center btn btn-dark btn-block " onclick="getCurrentLocation()"> <span class="fa fa-map-marker" style="font-size:15px;"></span> <a  class=" top-btn text-light" style="text-decoration: none;"> Use current location </a></h6></li>
+
+                                  <?php
+                                   if( !isset($_SESSION["isLoggedIn"]) && $_SESSION["isLoggedIn"] != true):
+                                  ?>
+                                  <li><a href="#" onclick="res();" class="btn btn btn-primary top-btn"> Login To Load Address </a></li>
+                                <?php endif; ?>
+                          </div>
+                        </div>
+
+                        <!-- <li class="nav-item">
+                            <a class="nav-link d-flex" href="#" id="deliverTo" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ata-bs-auto-close="outside" >
+                              <span style="font-size: 16px;" class="text-white"> Deliver </span>
+                              <span class="icon-arrow-down text-white" style="padding: 9px 0px 0px 10px;"></span>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-cart" role="menu" aria-labelledby="deliverTo" style="left:auto; right:0; background:white; height:auto; overflow:auto; padding: 20px;padding-top: 30px; right:-150px">
+
+                                <?php 
+                                  session_start();
+                                  if( isset($_SESSION["isLoggedIn"]) && $_SESSION["isLoggedIn"] == true):
+                                    $query2 = new ParseQuery("Address");
+                                    $query2->includeKey('user');
+                                    $userId = $_SESSION["userObjId"];
+                                    try {
+                                      $addressQueryData = $query2->find();
+                                
+                                      foreach ($addressQueryData as $key => $value) {
+                                        if($value->user){
+                                        if($value->user->getObjectId() === @$userId){
+                                          $addressOptions .= '<option value="'.$value->getObjectId() .'">'.$value->street.'</option>';
+                                          }
+                                        }
+                                      }
+                                
+                                    } catch (ParseException $ex) {
+                                      echo $ex->getMessage();
+                                    }
+
+                                ?>
+                                <select name="" class="form-control" id="">
+                                  <?=$addressOptions ?>
+                                </select>
+                                <?php else: ?>
+                                  <li class=""><h6 class="text-center btn btn-dark btn-block " onclick="getCurrentLocation()"> <span class="fa fa-map-marker" style="font-size:15px;"></span> <a  class=" top-btn text-light"> Use current location </a></h6></li>
+                                  <li><h6 class="text-center"> <a href="#" onclick="res();" class="btn btn-outline-light top-btn text-dark"> Login To Load Address </a></h6></li>
+                                <?php endif; ?>
+                            </ul>
+
+                        </li> -->
+
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="icon-menu"></span>
-            </button>
+                          <span class="icon-menu"></span>
+                        </button>
                         <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
                             <ul class="navbar-nav">
 
@@ -355,108 +477,108 @@ function rem(){
 
                                     <a class="nav-link" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
-                  <span style="    font-size: 16px;">Cart
-                  (<span  id="cart" style="    font-size: 16px;" >
+                                            <span style="    font-size: 16px;">Cart
+                                            (<span  id="cart" style="    font-size: 16px;" >
 
-				  <?php if(isset($_SESSION['cart'])): ?>
-				  <?=count($_SESSION['cart']) ?>
-                  <?php $h = '400px' ?>
-                  <?php else: ?>
-                  0
-                  <?php $h = 'auto' ?>
-                  <?php endif ?>
-                  </span> )
-                  </span>
-                  <span class="icon-arrow-down"></span>
-                </a>
+                                    <?php if(isset($_SESSION['cart'])): ?>
+                                    <?=count($_SESSION['cart']) ?>
+                                            <?php $h = '400px' ?>
+                                            <?php else: ?>
+                                            0
+                                            <?php $h = 'auto' ?>
+                                            <?php endif ?>
+                                            </span> )
+                                            </span>
+                                            <span class="icon-arrow-down"></span>
+                                          </a>
 
-            <ul  class="dropdown-menu dropdown-cart" role="menu" aria-labelledby="navbarDropdownMenuLink" style="left:auto; right:0; background:white; height:<?= $h ?>; overflow:auto; padding: 20px;padding-top: 30px;">
+                                      <ul  class="dropdown-menu dropdown-cart" role="menu" aria-labelledby="navbarDropdownMenuLink" style="left:auto; right:0; background:white; height:<?= $h ?>; overflow:auto; padding: 20px;padding-top: 30px;">
 
-             <?php if(isset($_SESSION['cart'])): ?>
+                                      <?php if(isset($_SESSION['cart'])): ?>
 
-             <?php if(isset($_GET['Id']))
-			 {
-				 $url = 'Id='.$_GET['Id'].'&';
-			 }
-			 else
-			 {
-				 $url='';
-			 }?>
+                                      <?php if(isset($_GET['Id']))
+                                {
+                                  $url = 'Id='.$_GET['Id'].'&';
+                                }
+                                else
+                                {
+                                  $url='';
+                                }?>
 
-                  <li>
-                 <h5 style="font-size: 20px;margin-bottom: 20px;">  Orders</h5>
-                 </li>
-               <?php $total=0; foreach ($_SESSION['cart'] as $k => $item):?>
-               <?php $total+= $item['qty']*$item['price'] ?>
-
-
-                                       <li style="padding-bottom: 10px;
-    padding-top: 10px;    border-bottom: 1px solid rgba(0,0,0,.1)">
-                  <span class="item" style="margin:0">
-
-                    <span class="item-left" style="margin:0;">
-
-                        <span class="item-info" style="margin:0">
-
-                            <span style="font-size:15px;">
-                           <?= $item['store_title'] ?> - <?= $item['category_title'] ?>
-                            <br>
-                             <?= $item['qty'] ?> x <?= $item['title'] ?></span>
-                           <?php if(isset($item['extra_item'])): ?>
-                           <?php $extraa =  explode(',',$item['extra_item']); ?>
-                           <?php if(count($extraa)): ?>
-
-                            <?php for($i=0; $i<count($extraa);  $i++): ?>
-                            <span  style="font-size:13px; color:#666">  <?= ucwords($extraa[$i])  ?></span>
-                            <?php  endfor ?>
-                            <?php endif ?>
-                            <?php endif ?>
-                        </span>
-
-                    </span>
-                    <span class="item-right" >
-                     <span style="font-size: 15px; margin-right:20px" > $<?= $item['qty']*$item['price'] ?>  </span>
-                       <a title="Remove"  href="detail.php?<?=$url ?>remove=<?= $k?>" style="font-size:14px; color:#666 "><i class="fa fa-times"></i></a>
-                    </span>
-                </span>
-              </li>
-                                       <?php  endforeach ?>
+                                            <li>
+                                          <h5 style="font-size: 20px;margin-bottom: 20px;">  Orders</h5>
+                                          </li>
+                                        <?php $total=0; foreach ($_SESSION['cart'] as $k => $item):?>
+                                        <?php $total+= $item['qty']*$item['price'] ?>
 
 
+                                                                <li style="padding-bottom: 10px;
+                              padding-top: 10px;    border-bottom: 1px solid rgba(0,0,0,.1)">
+                                            <span class="item" style="margin:0">
+
+                                              <span class="item-left" style="margin:0;">
+
+                                                  <span class="item-info" style="margin:0">
+
+                                                      <span style="font-size:15px;">
+                                                    <?= $item['store_title'] ?> - <?= $item['category_title'] ?>
+                                                      <br>
+                                                      <?= $item['qty'] ?> x <?= $item['title'] ?></span>
+                                                    <?php if(isset($item['extra_item'])): ?>
+                                                    <?php $extraa =  explode(',',$item['extra_item']); ?>
+                                                    <?php if(count($extraa)): ?>
+
+                                                      <?php for($i=0; $i<count($extraa);  $i++): ?>
+                                                      <span  style="font-size:13px; color:#666">  <?= ucwords($extraa[$i])  ?></span>
+                                                      <?php  endfor ?>
+                                                      <?php endif ?>
+                                                      <?php endif ?>
+                                                  </span>
+
+                                              </span>
+                                              <span class="item-right" >
+                                              <span style="font-size: 15px; margin-right:20px" > $<?= $item['qty']*$item['price'] ?>  </span>
+                                                <a title="Remove"  href="detail.php?<?=$url ?>remove=<?= $k?>" style="font-size:14px; color:#666 "><i class="fa fa-times"></i></a>
+                                              </span>
+                                          </span>
+                                        </li>
+                                                                <?php  endforeach ?>
 
 
 
 
-            <li style="margin-top:15px;">
 
-              <span class="item" style="margin:0;">
-                    <span class="item-left" style="font-size:15px; margin:0">
-                      Total Bill
-                    </span>
-                    <span class="item-right">
 
-                      <span class="item-left" style="font-size:15px; margin-right:35px;">
-                     $<?= $total ?>
-                    </span>
+                                      <li style="margin-top:15px;">
 
-                    </span>
-                </span>
-            </li>
-             <li style="margin-top:25px; margin-bottom:25px">
-             <center>
+                                        <span class="item" style="margin:0;">
+                                              <span class="item-left" style="font-size:15px; margin:0">
+                                                Total Bill
+                                              </span>
+                                              <span class="item-right">
 
-              <a href="index.php?<?=$url ?>cart=empty" class="btn btn-danger btn-outline-danger">Empty Cart</a>
-               <a href="checkout.php" class="btn btn-danger">Checkout</a>
-              </center>
-              </li>
-               <?php else: ?>
+                                                <span class="item-left" style="font-size:15px; margin-right:35px;">
+                                              $<?= $total ?>
+                                              </span>
 
-             <li>
-              <center>
-              Cart is Empty</center>
-              </li>
-            <?php endif ?>
-          </ul>
+                                              </span>
+                                          </span>
+                                      </li>
+                                      <li style="margin-top:25px; margin-bottom:25px">
+                                      <center>
+
+                                        <a href="index.php?<?=$url ?>cart=empty" class="btn btn-danger btn-outline-danger">Empty Cart</a>
+                                        <a href="checkout.php" class="btn btn-danger">Checkout</a>
+                                        </center>
+                                        </li>
+                                        <?php else: ?>
+
+                                      <li>
+                                        <center>
+                                        Cart is Empty</center>
+                                        </li>
+                                      <?php endif ?>
+                                    </ul>
 
 
 
@@ -496,5 +618,30 @@ function rem(){
           </div>
     </div>
 
+    <script>
+      const getCurrentLocation = () => {
+         navigator.geolocation.getCurrentPosition(showPosition)
+      }
+
+      const showPosition = (position) => {
+        const cords = {
+          latitude:position.coords.latitude,
+          longitude:position.coords.longitude
+        }
+        if(cords){
+          window.location.href = "result.php?cords="+cords.latitude +", "+cords.longitude;
+        }
+        console.table(cords)
+      }
+
+      $(document).ready(function(){
+        $(document).on("change", "#savedAddress",function (){
+          let value = $(this).val()
+          if(value !=''){
+            window.location.href = "result.php?cords="+value;
+          }
+        });
+      });
+    </script>
 <!--//END HEADER -->
     <!--============================= BOOKING =============================-->
