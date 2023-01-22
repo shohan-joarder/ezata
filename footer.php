@@ -7,12 +7,9 @@
                         <p>Inlivery Copyright © 2020 | All rights reserved. </p>                        
                     </div>
                 </div>
-<div class="col-md-3">
+                <div class="col-md-3">
                     <div class="copyright">
-                        
-                        <ul style="
-    margin: 0;
-">
+                        <ul style="margin: 0;">
                             <li><a href="#"><span class="ti-facebook"></span></a></li>
                             <li><a href="#"><span class="ti-twitter-alt"></span></a></li>
                             <li><a href="#"><span class="ti-instagram"></span></a></li>
@@ -25,7 +22,36 @@
     <!--//END FOOTER -->
 
 
+    <style>
+      /* Custom Scroller */
+      /* width */
+      ::-webkit-scrollbar {
+          width: 10px;
+      }
 
+      /* Track */
+      ::-webkit-scrollbar-track {
+          box-shadow: inset 0 0 5px grey;
+          border-radius: 10px;
+      }
+
+      /* Handle */
+      ::-webkit-scrollbar-thumb {
+          background: grey;
+          border-radius: 10px;
+      }
+
+      /* Handle on hover */
+      ::-webkit-scrollbar-thumb:hover {
+          background: #b30000;
+      }
+
+      .pac-container {
+
+          position: relative;
+
+      }
+  </style>
 
     <!-- jQuery, Bootstrap JS. -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

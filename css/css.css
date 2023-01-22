@@ -1,0 +1,136 @@
+.box-saddow{
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 5px 0 rgba(0, 0, 0, 0.19);
+}
+.input-group-text, .deliveryaddress  {
+    background-color: #eee !important;
+    border:none !important;
+}
+.input-group-text1, .deliveryaddress1  {
+  background-color: #fff !important;
+  border:none !important;
+}
+
+input[type='radio'] {
+    accent-color: #232323;
+    height:25px; width:25px; vertical-align: middle;margin-left: 10px;
+}
+.home-text {
+    outline: 0;
+    width: 100%;
+    border-width: 0 0 1px;
+    border-color: grey;
+  }
+  h5{
+    margin-bottom: 0rem !important;
+  }
+  .ver-center{
+    align-self: center;
+  }
+  .icon-style{
+    padding: 2px 5px;border-radius: 25px;
+  }
+  #otherlocation{
+    display: none;
+  }
+  .giftcard{
+    height: 230px;
+    border: 1px solid #D6D6D6;
+    border-radius: 20px;
+  }
+  .mega-m{
+    height: 400px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-top: 0px;
+    padding-right: 0px !important;
+  }
+  @media screen and (min-width: 992px) { 
+  .giftcard{
+    height: 300px;
+    border: 1px solid #D6D6D6;
+    border-radius: 20px;
+  }
+  .mega-w{
+    width: 400px;
+  }
+  }
+
+/* Custom File Uploader */
+  .input-file-container {
+    position: relative;
+    width: 225px;
+    border: 1px solid lightgrey;
+  } 
+  .js .input-file-trigger {
+    display: block;
+    padding: 14px 45px;
+    background: #fff;
+    color: grey;
+    font-size: 1em;
+    transition: all .4s;
+    cursor: pointer;
+  }
+  .js .input-file {
+    position: absolute;
+    top: 0; left: 0;
+    width: 225px;
+    opacity: 0;
+    padding: 14px 0;
+    cursor: pointer;
+  }
+  .js .input-file:hover + .input-file-trigger,
+  .js .input-file:focus + .input-file-trigger,
+  .js .input-file-trigger:hover,
+  .js .input-file-trigger:focus {
+    background:#000;
+    color: #fff;
+  }
+  
+  .file-return {
+    margin: 0;
+  }
+  .file-return:not(:empty) {
+    margin: 1em 0;
+  }
+  .js .file-return {
+    font-style: italic;
+    font-size: .9em;
+    font-weight: bold;
+  }
+  .js .file-return:not(:empty):before {
+    content: "Selected file: ";
+    font-style: normal;
+    font-weight: normal;
+  }
+  
+  /* End of Custom File Uploader */
+  #secondscreen{
+    display: none;
+  }
+  #thirdscreen{
+    display: none;
+  }
+  .pac-container{
+    width: auto !important;
+    top: 0 !important;
+    left: 0 !important;
+    position:relative !important;
+  }
+
+  #us2 .centerMarker {
+    position: absolute;
+    /*url of the marker*/
+    background: url(http://maps.gstatic.com/mapfiles/markers2/marker.png) no-repeat;
+    /*center the marker*/
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    /*fix offset when needed*/
+    margin-left: -10px;
+    margin-top: -34px;
+    /*size of the image*/
+    height: 34px;
+    width: 20px;
+    cursor: pointer;
+  }
+  

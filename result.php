@@ -44,24 +44,16 @@
 $southwestOfSF = new ParseGeoPoint($cords1, $cords2 );
 $northeastOfSF = new ParseGeoPoint($cords1, $cords2);
 
-// $southwestOfSF = new ParseGeoPoint( 9.031301,38.7383);
-// $northeastOfSF = new ParseGeoPoint( 9.031301,38.7383);
 
 $query2 = new ParseQuery("Store");
 $query2->withinGeoBox("coordinate", $southwestOfSF, $northeastOfSF);
 // $query2->limit(10);
 $pizzaPlacesInSF = $query2->find();
 
-// echo "<pre>";
-// print_r($pizzaPlacesInSF);
 
   try {
     
-      $results =$pizzaPlacesInSF;// $query->find();
-      //shuffle($results); enable prod
-    //   echo "<pre>";
-    // print_r($results);
-      ///var_dump("<pre>",$results); exit;
+      $results =$pizzaPlacesInSF;
      
   } catch (ParseException $ex) {
      
@@ -99,15 +91,6 @@ function Return_Substrings($text, $sopener, $scloser){
     return $result;
 }
 
-// print_r(count($result));die;
-
-// if(!$result){
-//   $output ='
-//       <div class="col-md-12 featured-responsive text-center">
-//           <h2>No Store found</h2>
-//       </div>
-//         ';
-// }else{
 
     foreach ( $results as $result ) {
 
