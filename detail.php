@@ -66,11 +66,11 @@ $data =[];
 
 try {
 
-    //$storeObject = $storeQuery->get($storeId);
+    $storeObject = $storeQuery->get($storeId);
 
     $storeObject = $storeQuery->first();
 
-    //print_r($storeObject);
+    // print_r($storeObject);
 
     $store["storeName"] = $storeObject->get("name");
 
@@ -98,8 +98,9 @@ try {
 
     $store["authorImage"] = $storeObject->get("author_image");
 
-    $store["authorImageUrl"] = $storeObject->get("author_image")->getURL();
-
+    if($storeObject->get("author_image") != null):
+        $store["authorImageUrl"] = @$storeObject->get("author_image")->getURL();
+    endif;
     $store["authorCountry"] = $storeObject->get("author_country");
 
     $store["amenities"] = $storeObject->get("amenities");
